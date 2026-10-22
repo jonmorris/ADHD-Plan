@@ -11,8 +11,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Habits',
-        short_name: 'Habits',
+        name: 'ADHD Plan',
+        short_name: 'ADHD Plan',
         start_url: '.',
         display: 'standalone',
         background_color: '#121212',
