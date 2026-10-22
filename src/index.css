@@ -226,3 +226,83 @@ textarea {
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+/* Tab bar */
+
+.tabs {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabs button {
+  flex: 1;
+  max-width: 10rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 1rem 0;
+  color: var(--muted);
+}
+
+.tabs button.on {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Playbook */
+
+.pages {
+  list-style: none;
+  padding: 0;
+}
+
+.pages button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+  padding: 1rem 0;
+}
+
+.page-bar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.page p {
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+.page li {
+  line-height: 1.5;
+}
+
+.page .danger {
+  margin-top: 2rem;
+}
+
+.page-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.page-edit .page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.page-edit textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
