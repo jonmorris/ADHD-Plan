@@ -1,9 +1,12 @@
 :root {
   --bg: #ffffff;
+  --surface: #f4f4f5;
   --text: #1a1a1a;
   --muted: #666666;
   --border: #dddddd;
   --accent: #2f6fde;
+  --on-accent: #ffffff;
+  --danger: #c62828;
   color-scheme: light dark;
   font-family: system-ui, sans-serif;
 }
@@ -11,10 +14,13 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #121212;
+    --surface: #1e1e20;
     --text: #eeeeee;
     --muted: #999999;
     --border: #333333;
     --accent: #6b9cf0;
+    --on-accent: #0b1a33;
+    --danger: #ef6b6b;
   }
 }
 
@@ -27,50 +33,196 @@ body {
 main {
   max-width: 32rem;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1rem 1rem 6rem;
 }
 
-form {
-  display: flex;
-  gap: 0.5rem;
-}
-
-input:not([type]) {
-  flex: 1;
+button,
+input,
+select,
+textarea {
   font: inherit;
-  padding: 0.6rem;
+  color: inherit;
 }
 
 button {
-  font: inherit;
   padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  cursor: pointer;
 }
 
-ul {
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+button.danger {
+  color: var(--danger);
+  margin-right: auto;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+input,
+select,
+textarea {
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg);
+}
+
+.export {
+  display: block;
+  margin-top: 2rem;
+}
+
+/* Today */
+
+.today-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.count,
+.empty {
+  color: var(--muted);
+}
+
+.tasks {
   list-style: none;
   padding: 0;
 }
 
-li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-label {
+.tasks li {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  border-bottom: 1px solid var(--border);
 }
 
-input[type='checkbox'] {
-  width: 1.5rem;
-  height: 1.5rem;
-  accent-color: var(--accent);
+.tasks .title {
+  flex: 1;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 1rem 0;
 }
 
-.streak {
+.tasks li.done .title {
   color: var(--muted);
+  text-decoration: line-through;
+}
+
+.check {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  flex-shrink: 0;
+  border: 2px solid var(--accent);
+  border-radius: 0.4rem;
+  background: var(--bg);
+}
+
+/* Half done: bottom half filled */
+.check.s1 {
+  background: linear-gradient(to top, var(--accent) 50%, var(--bg) 50%);
+}
+
+.check.s2 {
+  background: var(--accent);
+  position: relative;
+}
+
+.check.s2::after {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.2rem;
+  width: 0.4rem;
+  height: 0.8rem;
+  border: solid var(--on-accent);
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+.add {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* Task form (bottom sheet) */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 32rem;
+  box-sizing: border-box;
+  padding: 1rem 1rem 2rem;
+  background: var(--bg);
+  border-radius: 1rem 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sheet h2 {
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--muted);
+}
+
+.field input,
+.field select {
+  color: var(--text);
+}
+
+.field.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field.inline input {
+  width: 4rem;
+}
+
+.weekdays {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.weekdays button {
+  flex: 1;
+  padding: 0.6rem 0;
+}
+
+.weekdays button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
