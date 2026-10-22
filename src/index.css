@@ -1,0 +1,436 @@
+:root {
+  --bg: #ffffff;
+  --surface: #f4f4f5;
+  --text: #1a1a1a;
+  --muted: #666666;
+  --border: #dddddd;
+  --accent: #2f6fde;
+  --on-accent: #ffffff;
+  --danger: #c62828;
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --surface: #1e1e20;
+    --text: #eeeeee;
+    --muted: #999999;
+    --border: #333333;
+    --accent: #6b9cf0;
+    --on-accent: #0b1a33;
+    --danger: #ef6b6b;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+main {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 6rem;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+button.danger {
+  color: var(--danger);
+  margin-right: auto;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+input,
+select,
+textarea {
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg);
+}
+
+.export {
+  display: block;
+  margin-top: 2rem;
+}
+
+/* Today */
+
+.today-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.count,
+.empty {
+  color: var(--muted);
+}
+
+.tasks {
+  list-style: none;
+  padding: 0;
+}
+
+.tasks li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tasks .title {
+  flex: 1;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 1rem 0;
+}
+
+.tasks li.done .title {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.check {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  flex-shrink: 0;
+  border: 2px solid var(--accent);
+  border-radius: 0.4rem;
+  background: var(--bg);
+}
+
+/* Half done: bottom half filled */
+.check.s1 {
+  background: linear-gradient(to top, var(--accent) 50%, var(--bg) 50%);
+}
+
+.check.s2 {
+  background: var(--accent);
+  position: relative;
+}
+
+.check.s2::after {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.2rem;
+  width: 0.4rem;
+  height: 0.8rem;
+  border: solid var(--on-accent);
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+.add {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* Task form (bottom sheet) */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 32rem;
+  box-sizing: border-box;
+  padding: 1rem 1rem 2rem;
+  background: var(--bg);
+  border-radius: 1rem 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sheet h2 {
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--muted);
+}
+
+.field input,
+.field select {
+  color: var(--text);
+}
+
+.field.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field.inline input {
+  width: 4rem;
+}
+
+.weekdays {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.weekdays button {
+  flex: 1;
+  padding: 0.6rem 0;
+}
+
+.weekdays button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Tab bar */
+
+.tabs {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabs button {
+  flex: 1;
+  max-width: 10rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 1rem 0;
+  color: var(--muted);
+}
+
+.tabs button.on {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Playbook */
+
+.pages {
+  list-style: none;
+  padding: 0;
+}
+
+.pages button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+  padding: 1rem 0;
+}
+
+.page-bar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.page p {
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+.page li {
+  line-height: 1.5;
+}
+
+.page .danger {
+  margin-top: 2rem;
+}
+
+.page-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.page-edit .page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.page-edit textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* Analytics */
+
+.ranges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ranges button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+.stat .label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stat .value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+section h2 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.readout {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+}
+
+.readout strong {
+  color: var(--text);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Each column is the hit target; the bar inside is capped at 24px wide */
+.chart .col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+.chart .track {
+  position: relative;
+  width: 100%;
+  max-width: 24px;
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  overflow: hidden;
+}
+
+.chart .fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--accent);
+}
+
+.chart .col.on .track {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.task-table th,
+.task-table td {
+  text-align: left;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-table th {
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.task-table td:not(:first-child),
+.task-table th:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
