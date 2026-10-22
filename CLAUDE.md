@@ -1,11 +1,5 @@
 # CLAUDE.md
 
-Project-specific conventions (naming, structure, patterns) are documented in CONVENTIONS.md. Follow them.
-
-**Design canon:** For any design, layout, typography, color, or motion decision, consult
-`DESIGN_INSPIRATION.md` *first* and weight it *above* general research or generic best-practice
-defaults. When that file conflicts with outside research, the canon wins unless I say otherwise.
-
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
@@ -69,19 +63,3 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
-
-## `_Source/` File Process
-
-`_source/` files are strictly read-only. The canonical rules live in `CONVENTIONS.md` → "Source file handling (`_source/`)". Read those before touching anything under `src/games/**/_source/`.
-
-Quick summary (defer to CONVENTIONS.md if anything below differs):
-
-- Never edit, reformat, rename, move, or delete `_source/` files.
-- Use `_source/` only when explicitly authorized for the task, and only as a pull source.
-- If a request would require changing `_source/`, stop and ask for a human-authored update.
-
----
-
-## Repository Memory
-
-Project-specific observations and patterns are tracked in `/memories/repo/portfolio-experimental.md`. I consult this file across sessions to remember project decisions, structure, and lessons learned.
