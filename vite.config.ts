@@ -4,6 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Served from https://jonmorris.github.io/ADHD-Plan/
+  base: '/ADHD-Plan/',
   plugins: [
     preact(),
     VitePWA({
