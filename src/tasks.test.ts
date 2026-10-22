@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dayStats, isDueOn, nextState, occursOn, stateOn, streak, type Log, type Repeat, type Task } from './tasks'
+import { dayStats, isDueOn, nextState, occursOn, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -111,5 +111,29 @@ describe('streak', () => {
     const mwf = task({ kind: 'weekly', every: 1, days: [1, 3, 5] })
     const log: Log = { '2026-10-02': { t: 1 }, '2026-10-05': { t: 1 } } // Fri, Mon
     expect(streak(mwf, log, '2026-10-06')).toBe(2) // Tue
+  })
+})
+
+describe('summarize', () => {
+  const daily = task({ kind: 'daily', every: 1 }, '2026-10-01', { id: 'd' })
+  const oneOff = task({ kind: 'none' }, '2026-10-03', { id: 'o' })
+  const log: Log = { '2026-10-04': { d: 1, o: 0.5 }, '2026-10-05': { d: 0.5, o: 1 } }
+  const s = summarize([daily, oneOff], log, '2026-10-05', 3)
+
+  it('gives due and done for each day in the range', () => {
+    expect(s.perDay).toEqual([
+      { date: '2026-10-03', due: 2, done: 0 },
+      { date: '2026-10-04', due: 2, done: 1.5 },
+      { date: '2026-10-05', due: 2, done: 1.5 },
+    ])
+  })
+
+  it('totals each repeating task', () => {
+    expect(s.repeating).toEqual([{ task: daily, due: 3, done: 1.5, streak: 1 }])
+  })
+
+  it('counts one-off tasks finished in the range', () => {
+    expect(s.oneOffsDone).toBe(1)
+    expect(summarize([oneOff], log, '2026-10-20', 7).oneOffsDone).toBe(0)
   })
 })

@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks'
+import { Analytics } from './Analytics'
 import { toDateKey } from './dates'
 import type { Page } from './notes'
 import { Playbook } from './Playbook'
@@ -6,7 +7,7 @@ import { usePersisted } from './store'
 import type { Log, Task } from './tasks'
 import { Today } from './Today'
 
-const TABS = { today: 'Today', playbook: 'Playbook' }
+const TABS = { today: 'Today', playbook: 'Playbook', analytics: 'Analytics' }
 
 export function App() {
   const [tab, setTab] = useState<keyof typeof TABS>('today')
@@ -34,6 +35,7 @@ export function App() {
           <Today tasks={tasks} log={log} today={today} saveTasks={saveTasks} saveLog={saveLog} />
         )}
         {tab === 'playbook' && <Playbook pages={pages} savePages={savePages} />}
+        {tab === 'analytics' && <Analytics tasks={tasks} log={log} today={today} />}
         <button class="export" onClick={exportData}>
           Export backup
         </button>

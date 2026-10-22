@@ -306,3 +306,131 @@ textarea {
   resize: vertical;
   line-height: 1.5;
 }
+
+/* Analytics */
+
+.ranges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ranges button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+.stat .label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stat .value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+section h2 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.readout {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+}
+
+.readout strong {
+  color: var(--text);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Each column is the hit target; the bar inside is capped at 24px wide */
+.chart .col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+.chart .track {
+  position: relative;
+  width: 100%;
+  max-width: 24px;
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  overflow: hidden;
+}
+
+.chart .fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--accent);
+}
+
+.chart .col.on .track {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.task-table th,
+.task-table td {
+  text-align: left;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-table th {
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.task-table td:not(:first-child),
+.task-table th:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

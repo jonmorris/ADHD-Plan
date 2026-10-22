@@ -55,7 +55,7 @@ export function occursOn(r: Repeat, start: string, key: string): boolean {
 }
 
 // One-off tasks: the first day they were marked done, if any.
-function doneOn(task: Task, log: Log): string | undefined {
+export function doneOn(task: Task, log: Log): string | undefined {
   return Object.keys(log)
     .sort()
     .find((d) => log[d][task.id] === 1)
@@ -93,4 +93,23 @@ export function streak(task: Task, log: Log, today: string): number {
     else if (d !== today) break
   }
   return count
+}
+
+// Totals for the `days` days ending today.
+export function summarize(tasks: Task[], log: Log, today: string, days: number) {
+  const dates = Array.from({ length: days }, (_, i) => addDays(today, i - days + 1))
+  const perDay = dates.map((date) => ({ date, ...dayStats(tasks, log, date, today) }))
+  const repeating = tasks
+    .filter((t) => t.repeat.kind !== 'none')
+    .map((task) => {
+      const due = dates.filter((d) => isDueOn(task, d, log, today))
+      const done = due.reduce((sum, d) => sum + stateOn(task, d, log), 0)
+      return { task, due: due.length, done, streak: streak(task, log, today) }
+    })
+    .filter((r) => r.due > 0)
+  const oneOffsDone = tasks.filter((t) => {
+    const d = t.repeat.kind === 'none' && doneOn(t, log)
+    return d && d >= dates[0]
+  }).length
+  return { perDay, repeating, oneOffsDone }
 }
