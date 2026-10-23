@@ -7,6 +7,12 @@
   --accent: #2f6fde;
   --on-accent: #ffffff;
   --danger: #c62828;
+  /* Checkbox color per cadence (validated categorical palette, light steps) */
+  --c-none: #2a78d6;
+  --c-daily: #eb6834;
+  --c-weekly: #1baf7a;
+  --c-monthly: #eda100;
+  --c-yearly: #e87ba4;
   color-scheme: light dark;
   font-family: system-ui, sans-serif;
 }
@@ -21,6 +27,11 @@
     --accent: #6b9cf0;
     --on-accent: #0b1a33;
     --danger: #ef6b6b;
+    --c-none: #3987e5;
+    --c-daily: #d95926;
+    --c-weekly: #199e70;
+    --c-monthly: #c98500;
+    --c-yearly: #d55181;
   }
 }
 
@@ -87,7 +98,32 @@ textarea {
 .today-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.today-header h1 {
+  margin: 0.5rem 0;
+  text-align: center;
+}
+
+.day-step {
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0.4rem 0.9rem;
+}
+
+.count {
+  margin-top: 0;
+  text-align: center;
+}
+
+button.link {
+  border: none;
+  background: none;
+  padding: 0 0 0 0.75rem;
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .count,
@@ -135,23 +171,52 @@ textarea {
   text-decoration: line-through;
 }
 
+/* Checkbox color follows the task's cadence */
+.tasks li {
+  --check: var(--accent);
+  --on-check: #ffffff;
+}
+
+.tasks li.c-none {
+  --check: var(--c-none);
+}
+
+.tasks li.c-daily {
+  --check: var(--c-daily);
+}
+
+.tasks li.c-weekly {
+  --check: var(--c-weekly);
+  --on-check: #121212;
+}
+
+.tasks li.c-monthly {
+  --check: var(--c-monthly);
+  --on-check: #121212;
+}
+
+.tasks li.c-yearly {
+  --check: var(--c-yearly);
+  --on-check: #121212;
+}
+
 .check {
   width: 1.75rem;
   height: 1.75rem;
   padding: 0;
   flex-shrink: 0;
-  border: 2px solid var(--accent);
+  border: 2.5px solid var(--check);
   border-radius: 0.4rem;
   background: var(--bg);
 }
 
 /* Half done: bottom half filled */
 .check.s1 {
-  background: linear-gradient(to top, var(--accent) 50%, var(--bg) 50%);
+  background: linear-gradient(to top, var(--check) 50%, var(--bg) 50%);
 }
 
 .check.s2 {
-  background: var(--accent);
+  background: var(--check);
   position: relative;
 }
 
@@ -162,9 +227,33 @@ textarea {
   top: 0.2rem;
   width: 0.4rem;
   height: 0.8rem;
-  border: solid var(--on-accent);
+  border: solid var(--on-check);
   border-width: 0 3px 3px 0;
   transform: rotate(45deg);
+}
+
+.tasks .title:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.list-tools {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.move {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.move button {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  font-size: 1.2rem;
 }
 
 .add {
@@ -176,7 +265,11 @@ textarea {
 
 .sheet-backdrop {
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  /* Fit the area above the on-screen keyboard (set in viewport.ts) */
+  top: var(--vv-top, 0);
+  height: var(--vv-height, 100%);
   z-index: 10; /* above the tab bar */
   background: rgb(0 0 0 / 0.4);
   display: flex;
@@ -223,6 +316,15 @@ textarea {
 
 .field.inline input {
   width: 4rem;
+}
+
+.end-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.end-row input {
+  flex: 1;
 }
 
 .weekdays {

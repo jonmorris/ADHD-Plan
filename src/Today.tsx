@@ -1,25 +1,47 @@
 import { useState } from 'preact/hooks'
-import { dayStats, describeRepeat, isDueOn, nextState, stateOn, type Log, type State, type Task } from './tasks'
+import { addDays, fromDateKey } from './dates'
+import {
+  dayStats,
+  describeRepeat,
+  isDueOn,
+  nextState,
+  sortTasks,
+  stateOn,
+  type Log,
+  type State,
+  type Task,
+} from './tasks'
 import { TaskForm } from './TaskForm'
 
 type Props = {
   tasks: Task[]
   log: Log
+  order: string[]
   today: string
   saveTasks: (tasks: Task[]) => void
   saveLog: (log: Log) => void
+  saveOrder: (order: string[]) => void
 }
 
 const LABELS: Record<State, string> = { 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
 
-export function Today({ tasks, log, today, saveTasks, saveLog }: Props) {
-  const [editing, setEditing] = useState<Task>()
+function dayLabel(date: string, today: string) {
+  if (date === today) return 'Today'
+  if (date === addDays(today, -1)) return 'Yesterday'
+  return fromDateKey(date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+}
 
-  const due = tasks.filter((t) => isDueOn(t, today, log, today))
-  const { done } = dayStats(tasks, log, today, today)
+export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder }: Props) {
+  const [date, setDate] = useState(today)
+  const [editing, setEditing] = useState<Task>()
+  const [reordering, setReordering] = useState(false)
+
+  const sorted = sortTasks(tasks, order)
+  const due = sorted.filter((t) => isDueOn(t, date, log, today))
+  const { done } = dayStats(tasks, log, date, today)
 
   function tap(task: Task) {
-    saveLog({ ...log, [today]: { ...log[today], [task.id]: nextState(stateOn(task, today, log)) } })
+    saveLog({ ...log, [date]: { ...log[date], [task.id]: nextState(stateOn(task, date, log)) } })
   }
 
   function save(task: Task) {
@@ -34,46 +56,105 @@ export function Today({ tasks, log, today, saveTasks, saveLog }: Props) {
     setEditing(undefined)
   }
 
+  // Swap a task with its neighbour in this day's list, saving the order of every task.
+  function move(index: number, step: -1 | 1) {
+    const ids = sorted.map((t) => t.id)
+    const a = ids.indexOf(due[index].id)
+    const b = ids.indexOf(due[index + step].id)
+    ;[ids[a], ids[b]] = [ids[b], ids[a]]
+    saveOrder(ids)
+  }
+
   function addTask() {
-    setEditing({ id: crypto.randomUUID(), title: '', start: today, repeat: { kind: 'none' } })
+    setEditing({ id: crypto.randomUUID(), title: '', start: date, repeat: { kind: 'none' } })
   }
 
   return (
     <>
       <header class="today-header">
-        <h1>Today</h1>
-        <p class="count">
-          {done} of {due.length} done
-        </p>
+        <button class="day-step" aria-label="Previous day" onClick={() => setDate(addDays(date, -1))}>
+          ‹
+        </button>
+        <h1>{dayLabel(date, today)}</h1>
+        <button
+          class="day-step"
+          aria-label="Next day"
+          disabled={date >= today}
+          onClick={() => setDate(addDays(date, 1))}
+        >
+          ›
+        </button>
       </header>
+      <p class="count">
+        {done} of {due.length} done
+        {date !== today && (
+          <button class="link" onClick={() => setDate(today)}>
+            Back to today
+          </button>
+        )}
+      </p>
 
-      {due.length === 0 && <p class="empty">Nothing on today. Add a task to get started.</p>}
+      {due.length > 1 && (
+        <div class="list-tools">
+          {reordering && order.length > 0 && (
+            <button class="link" onClick={() => saveOrder([])}>
+              Reset to default order
+            </button>
+          )}
+          <button class={reordering ? 'primary' : ''} onClick={() => setReordering(!reordering)}>
+            {reordering ? 'Done' : 'Reorder'}
+          </button>
+        </div>
+      )}
+
+      {due.length === 0 && (
+        <p class="empty">
+          {date === today ? 'Nothing on today. Add a task to get started.' : 'Nothing was on this day.'}
+        </p>
+      )}
 
       <ul class="tasks">
-        {due.map((t) => {
-          const state = stateOn(t, today, log)
+        {due.map((t, i) => {
+          const state = stateOn(t, date, log)
           return (
-            <li key={t.id} class={state === 1 ? 'done' : ''}>
+            <li key={t.id} class={`c-${t.repeat.kind}${state === 1 ? ' done' : ''}`}>
               <button
                 role="checkbox"
                 class={`check s${state * 2}`}
                 aria-checked={state === 1 ? 'true' : state === 0.5 ? 'mixed' : 'false'}
                 aria-label={`${t.title}: ${LABELS[state]}`}
+                disabled={reordering}
                 onClick={() => tap(t)}
               />
-              <button class="title" onClick={() => setEditing(t)}>
+              <button class="title" disabled={reordering} onClick={() => setEditing(t)}>
                 <span class="name">{t.title}</span>
-                {t.repeat.kind !== 'none' && <span class="repeat">{describeRepeat(t.repeat, t.start)}</span>}
+                <span class="repeat">{describeRepeat(t.repeat, t.start, t.end)}</span>
                 {t.notes && <span class="notes">{t.notes}</span>}
               </button>
+              {reordering && (
+                <span class="move">
+                  <button aria-label={`Move ${t.title} up`} disabled={i === 0} onClick={() => move(i, -1)}>
+                    ↑
+                  </button>
+                  <button
+                    aria-label={`Move ${t.title} down`}
+                    disabled={i === due.length - 1}
+                    onClick={() => move(i, 1)}
+                  >
+                    ↓
+                  </button>
+                </span>
+              )}
             </li>
           )
         })}
       </ul>
 
-      <button class="primary add" onClick={addTask}>
-        + Add task
-      </button>
+      {!reordering && (
+        <button class="primary add" onClick={addTask}>
+          + Add task
+        </button>
+      )}
 
       {editing && (
         <TaskForm
