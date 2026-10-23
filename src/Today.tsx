@@ -28,6 +28,7 @@ const LABELS: Record<State, string> = { 0: 'Not done', 0.5: 'Half done', 1: 'Don
 function dayLabel(date: string, today: string) {
   if (date === today) return 'Today'
   if (date === addDays(today, -1)) return 'Yesterday'
+  if (date === addDays(today, 1)) return 'Tomorrow'
   return fromDateKey(date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
@@ -39,6 +40,7 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
   const sorted = sortTasks(tasks, order)
   const due = sorted.filter((t) => isDueOn(t, date, log, today))
   const { done } = dayStats(tasks, log, date, today)
+  const future = date > today
 
   function tap(task: Task) {
     saveLog({ ...log, [date]: { ...log[date], [task.id]: nextState(stateOn(task, date, log)) } })
@@ -87,12 +89,7 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
             · Week {weekNumber(fromDateKey(date))}
           </p>
         </div>
-        <button
-          class="day-step"
-          aria-label="Next day"
-          disabled={date >= today}
-          onClick={() => setDate(addDays(date, 1))}
-        >
+        <button class="day-step" aria-label="Next day" onClick={() => setDate(addDays(date, 1))}>
           ›
         </button>
       </header>
@@ -125,7 +122,11 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
 
       {due.length === 0 && (
         <p class="empty">
-          {date === today ? 'Nothing on today. Add a task to get started.' : 'Nothing was on this day.'}
+          {date === today
+            ? 'Nothing on today. Add a task to get started.'
+            : future
+              ? 'Nothing planned for this day yet.'
+              : 'Nothing was on this day.'}
         </p>
       )}
 
@@ -139,7 +140,7 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
                 class={`check s${state * 2}`}
                 aria-checked={state === 1 ? 'true' : state === 0.5 ? 'mixed' : 'false'}
                 aria-label={`${t.title}: ${LABELS[state]}`}
-                disabled={reordering}
+                disabled={reordering || future}
                 onClick={() => tap(t)}
               />
               <button class="title" disabled={reordering} onClick={() => setEditing(t)}>

@@ -118,9 +118,9 @@ export function doneOn(task: Task, log: Log): string | undefined {
 export function isDueOn(task: Task, key: string, log: Log, today: string): boolean {
   if (key < task.start || (task.removedOn && key >= task.removedOn)) return false
   if (task.repeat.kind !== 'none') return !(task.end && key > task.end) && occursOn(task.repeat, task.start, key)
-  // One-off tasks carry over each day until done
+  // One-off tasks carry over each day until done (a future one shows on its own date)
   const done = doneOn(task, log)
-  return done ? key <= done : key <= today
+  return done ? key <= done : key <= (task.start > today ? task.start : today)
 }
 
 export function stateOn(task: Task, key: string, log: Log): State {

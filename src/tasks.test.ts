@@ -66,6 +66,15 @@ describe('one-off tasks', () => {
     expect(isDueOn(t, '2026-10-13', log, '2026-10-20')).toBe(false)
   })
 
+  it('shows on future days only from its own date, and never on days after today when undone', () => {
+    const future = task({ kind: 'none' }, '2026-10-25')
+    expect(isDueOn(future, '2026-10-24', {}, '2026-10-20')).toBe(false)
+    expect(isDueOn(future, '2026-10-25', {}, '2026-10-20')).toBe(true)
+    expect(isDueOn(future, '2026-10-26', {}, '2026-10-20')).toBe(false)
+    // A task carried over to today doesn't also appear on tomorrow
+    expect(isDueOn(t, '2026-10-21', {}, '2026-10-20')).toBe(false)
+  })
+
   it('keeps a half-done state on later days', () => {
     const log: Log = { '2026-10-10': { t: 0.5 } }
     expect(stateOn(t, '2026-10-11', log)).toBe(0.5)
