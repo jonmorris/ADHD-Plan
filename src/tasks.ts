@@ -34,21 +34,31 @@ function ordinal(n: number): string {
   return n + suffix
 }
 
-// Short description of a schedule, e.g. "Every 2 weeks on Mon, Thu". Empty for one-off tasks.
+// Short description of a schedule, e.g. "Every 2 weeks on Mon, Thu".
 export function describeRepeat(r: Repeat, start: string): string {
-  if (r.kind === 'none') return ''
+  if (r.kind === 'none') return 'One-off'
   const s = fromDateKey(start)
   const every = (one: string, unit: string) => (r.every === 1 ? one : `Every ${r.every} ${unit}s`)
   switch (r.kind) {
     case 'daily':
       return every('Daily', 'day')
     case 'weekly':
-      return `${every('Weekly', 'week')} on ${r.days.map((d) => DAYS[d]).join(', ')}`
+      return `${every('Weekly', 'week')} on ${[...r.days].sort().map((d) => DAYS[d]).join(', ')}`
     case 'monthly':
       return `${every('Monthly', 'month')} on the ${ordinal(s.getDate())}`
     case 'yearly':
       return `${every('Yearly', 'year')} on ${s.getDate()} ${MONTHS[s.getMonth()]}`
   }
+}
+
+// Rough days between occurrences, for sorting: one-off first, then daily, then longer cycles.
+function cadenceDays(r: Repeat): number {
+  const unit = { none: 0, daily: 1, weekly: 7, monthly: 30, yearly: 365 }[r.kind]
+  return r.kind === 'none' ? 0 : unit * r.every
+}
+
+export function byCadence(a: Task, b: Task): number {
+  return cadenceDays(a.repeat) - cadenceDays(b.repeat)
 }
 
 function daysInMonth(d: Date): number {

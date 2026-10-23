@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dayStats, describeRepeat, isDueOn, nextState, occursOn, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
+import { byCadence, dayStats, describeRepeat, isDueOn, nextState, occursOn, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -140,13 +140,39 @@ describe('summarize', () => {
 
 describe('describeRepeat', () => {
   it('describes each kind of schedule', () => {
-    expect(describeRepeat({ kind: 'none' }, '2026-10-22')).toBe('')
+    expect(describeRepeat({ kind: 'none' }, '2026-10-22')).toBe('One-off')
     expect(describeRepeat({ kind: 'daily', every: 1 }, '2026-10-22')).toBe('Daily')
     expect(describeRepeat({ kind: 'daily', every: 3 }, '2026-10-22')).toBe('Every 3 days')
-    expect(describeRepeat({ kind: 'weekly', every: 1, days: [1, 4] }, '2026-10-22')).toBe('Weekly on Mon, Thu')
+    expect(describeRepeat({ kind: 'weekly', every: 1, days: [4, 1] }, '2026-10-22')).toBe('Weekly on Mon, Thu')
     expect(describeRepeat({ kind: 'weekly', every: 2, days: [0] }, '2026-10-22')).toBe('Every 2 weeks on Sun')
     expect(describeRepeat({ kind: 'monthly', every: 1 }, '2026-10-22')).toBe('Monthly on the 22nd')
     expect(describeRepeat({ kind: 'monthly', every: 3 }, '2026-10-11')).toBe('Every 3 months on the 11th')
     expect(describeRepeat({ kind: 'yearly', every: 1 }, '2026-10-01')).toBe('Yearly on 1 Oct')
+  })
+})
+
+describe('byCadence', () => {
+  it('puts one-off tasks first, then shorter cycles before longer ones, keeping order within a cadence', () => {
+    const t = (id: string, repeat: Repeat) => task(repeat, '2026-10-01', { id })
+    const tasks = [
+      t('yearly', { kind: 'yearly', every: 1 }),
+      t('daily-a', { kind: 'daily', every: 1 }),
+      t('fortnightly', { kind: 'weekly', every: 2, days: [1] }),
+      t('one-off', { kind: 'none' }),
+      t('monthly', { kind: 'monthly', every: 1 }),
+      t('every-3-days', { kind: 'daily', every: 3 }),
+      t('weekly', { kind: 'weekly', every: 1, days: [1] }),
+      t('daily-b', { kind: 'daily', every: 1 }),
+    ]
+    expect([...tasks].sort(byCadence).map((x) => x.id)).toEqual([
+      'one-off',
+      'daily-a',
+      'daily-b',
+      'every-3-days',
+      'weekly',
+      'fortnightly',
+      'monthly',
+      'yearly',
+    ])
   })
 })
