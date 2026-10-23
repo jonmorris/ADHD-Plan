@@ -43,7 +43,7 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
   const future = date > today
 
   function tap(task: Task) {
-    saveLog({ ...log, [date]: { ...log[date], [task.id]: nextState(stateOn(task, date, log)) } })
+    saveLog({ ...log, [date]: { ...log[date], [task.id]: nextState(stateOn(task, date, log), !!task.allowHalf) } })
   }
 
   function save(task: Task) {
