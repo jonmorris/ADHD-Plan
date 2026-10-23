@@ -232,6 +232,30 @@ button.link {
   transform: rotate(45deg);
 }
 
+.tasks .title:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.list-tools {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.move {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.move button {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  font-size: 1.2rem;
+}
+
 .add {
   width: 100%;
   margin-top: 1rem;
@@ -241,7 +265,11 @@ button.link {
 
 .sheet-backdrop {
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  /* Fit the area above the on-screen keyboard (set in viewport.ts) */
+  top: var(--vv-top, 0);
+  height: var(--vv-height, 100%);
   z-index: 10; /* above the tab bar */
   background: rgb(0 0 0 / 0.4);
   display: flex;

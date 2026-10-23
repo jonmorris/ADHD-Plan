@@ -61,6 +61,15 @@ export function byCadence(a: Task, b: Task): number {
   return cadenceDays(a.repeat) - cadenceDays(b.repeat)
 }
 
+// Tasks in the user's saved order. Tasks not in it yet (e.g. newly added) go after, by cadence.
+export function sortTasks(tasks: Task[], order: string[]): Task[] {
+  const pos = (t: Task) => {
+    const i = order.indexOf(t.id)
+    return i === -1 ? Infinity : i
+  }
+  return [...tasks].sort((a, b) => pos(a) - pos(b) || byCadence(a, b))
+}
+
 function daysInMonth(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
 }

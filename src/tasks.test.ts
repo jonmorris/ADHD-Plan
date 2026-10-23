@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byCadence, dayStats, describeRepeat, isDueOn, nextState, occursOn, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
+import { byCadence, dayStats, describeRepeat, isDueOn, nextState, occursOn, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -174,5 +174,22 @@ describe('byCadence', () => {
       'monthly',
       'yearly',
     ])
+  })
+})
+
+describe('sortTasks', () => {
+  const t = (id: string, repeat: Repeat) => task(repeat, '2026-10-01', { id })
+  const daily = t('daily', { kind: 'daily', every: 1 })
+  const yearly = t('yearly', { kind: 'yearly', every: 1 })
+  const oneOff = t('one-off', { kind: 'none' })
+  const weekly = t('weekly', { kind: 'weekly', every: 1, days: [1] })
+
+  it('uses cadence order when nothing has been reordered', () => {
+    expect(sortTasks([yearly, daily, oneOff], []).map((x) => x.id)).toEqual(['one-off', 'daily', 'yearly'])
+  })
+
+  it('uses the saved order, with tasks not in it after, by cadence', () => {
+    const ids = sortTasks([daily, yearly, oneOff, weekly], ['yearly', 'daily']).map((x) => x.id)
+    expect(ids).toEqual(['yearly', 'daily', 'one-off', 'weekly'])
   })
 })

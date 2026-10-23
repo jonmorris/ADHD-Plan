@@ -14,13 +14,14 @@ export function App() {
   const [tasks, saveTasks] = usePersisted<Task[]>('tasks', [])
   const [log, saveLog] = usePersisted<Log>('log', {})
   const [pages, savePages] = usePersisted<Page[]>('pages', [])
+  const [order, saveOrder] = usePersisted<string[]>('order', [])
 
-  if (!tasks || !log || !pages) return null
+  if (!tasks || !log || !pages || !order) return null
 
   const today = toDateKey(new Date())
 
   function exportData() {
-    const blob = new Blob([JSON.stringify({ tasks, log, pages }, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify({ tasks, log, pages, order }, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `adhd-plan-${today}.json`
@@ -32,7 +33,15 @@ export function App() {
     <>
       <main>
         {tab === 'today' && (
-          <Today tasks={tasks} log={log} today={today} saveTasks={saveTasks} saveLog={saveLog} />
+          <Today
+            tasks={tasks}
+            log={log}
+            order={order}
+            today={today}
+            saveTasks={saveTasks}
+            saveLog={saveLog}
+            saveOrder={saveOrder}
+          />
         )}
         {tab === 'playbook' && <Playbook pages={pages} savePages={savePages} />}
         {tab === 'analytics' && <Analytics tasks={tasks} log={log} today={today} />}
