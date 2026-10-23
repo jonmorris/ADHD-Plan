@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dayStats, isDueOn, nextState, occursOn, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
+import { dayStats, describeRepeat, isDueOn, nextState, occursOn, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -135,5 +135,18 @@ describe('summarize', () => {
   it('counts one-off tasks finished in the range', () => {
     expect(s.oneOffsDone).toBe(1)
     expect(summarize([oneOff], log, '2026-10-20', 7).oneOffsDone).toBe(0)
+  })
+})
+
+describe('describeRepeat', () => {
+  it('describes each kind of schedule', () => {
+    expect(describeRepeat({ kind: 'none' }, '2026-10-22')).toBe('')
+    expect(describeRepeat({ kind: 'daily', every: 1 }, '2026-10-22')).toBe('Daily')
+    expect(describeRepeat({ kind: 'daily', every: 3 }, '2026-10-22')).toBe('Every 3 days')
+    expect(describeRepeat({ kind: 'weekly', every: 1, days: [1, 4] }, '2026-10-22')).toBe('Weekly on Mon, Thu')
+    expect(describeRepeat({ kind: 'weekly', every: 2, days: [0] }, '2026-10-22')).toBe('Every 2 weeks on Sun')
+    expect(describeRepeat({ kind: 'monthly', every: 1 }, '2026-10-22')).toBe('Monthly on the 22nd')
+    expect(describeRepeat({ kind: 'monthly', every: 3 }, '2026-10-11')).toBe('Every 3 months on the 11th')
+    expect(describeRepeat({ kind: 'yearly', every: 1 }, '2026-10-01')).toBe('Yearly on 1 Oct')
   })
 })
