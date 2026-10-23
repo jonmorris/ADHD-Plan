@@ -283,7 +283,7 @@ button.link {
   max-height: 100%;
   overflow-y: auto; /* scrolls when the keyboard leaves too little room */
   box-sizing: border-box;
-  padding: 1rem 1rem 2rem;
+  padding: 1rem 1rem 0;
   background: var(--bg);
   border-radius: 1rem 1rem 0 0;
   display: flex;
@@ -347,6 +347,15 @@ button.link {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+/* Keep Cancel/Save in view while the rest of the form scrolls */
+.sheet .actions {
+  position: sticky;
+  bottom: 0;
+  padding: 0.75rem 0 1.25rem;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
 }
 
 /* Tab bar */
