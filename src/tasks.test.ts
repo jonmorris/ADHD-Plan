@@ -78,6 +78,20 @@ describe('one-off tasks', () => {
   })
 })
 
+describe('end date', () => {
+  const t = task({ kind: 'daily', every: 1 }, '2026-10-01', { end: '2026-10-05' })
+
+  it('repeats up to and including the end date, then stops', () => {
+    expect(isDueOn(t, '2026-10-05', {}, '2026-10-20')).toBe(true)
+    expect(isDueOn(t, '2026-10-06', {}, '2026-10-20')).toBe(false)
+  })
+
+  it('does not break a streak once the task has ended', () => {
+    const log: Log = { '2026-10-04': { t: 1 }, '2026-10-05': { t: 1 } }
+    expect(streak(t, log, '2026-10-20')).toBe(2)
+  })
+})
+
 describe('nextState', () => {
   it('cycles empty → half → done → empty', () => {
     expect(nextState(0)).toBe(0.5)
@@ -148,6 +162,13 @@ describe('describeRepeat', () => {
     expect(describeRepeat({ kind: 'monthly', every: 1 }, '2026-10-22')).toBe('Monthly on the 22nd')
     expect(describeRepeat({ kind: 'monthly', every: 3 }, '2026-10-11')).toBe('Every 3 months on the 11th')
     expect(describeRepeat({ kind: 'yearly', every: 1 }, '2026-10-01')).toBe('Yearly on 1 Oct')
+  })
+
+  it('adds the end date, with the year when it differs from the start', () => {
+    expect(describeRepeat({ kind: 'daily', every: 1 }, '2026-10-01', '2026-12-31')).toBe('Daily until 31 Dec')
+    expect(describeRepeat({ kind: 'monthly', every: 1 }, '2026-10-15', '2027-03-15')).toBe(
+      'Monthly on the 15th until 15 Mar 2027',
+    )
   })
 })
 

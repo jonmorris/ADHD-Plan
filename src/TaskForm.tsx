@@ -17,6 +17,7 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
+  const [end, setEnd] = useState(task.end ?? '')
   const [kind, setKind] = useState<Repeat['kind']>(task.repeat.kind)
   const [every, setEvery] = useState(task.repeat.kind === 'none' ? 1 : task.repeat.every)
   const [days, setDays] = useState(
@@ -27,7 +28,14 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
     e.preventDefault()
     const repeat: Repeat =
       kind === 'none' ? { kind } : kind === 'weekly' ? { kind, every, days } : { kind, every }
-    onSave({ ...task, title: title.trim(), notes: notes.trim() || undefined, start, repeat })
+    onSave({
+      ...task,
+      title: title.trim(),
+      notes: notes.trim() || undefined,
+      start,
+      repeat,
+      end: kind !== 'none' && end ? end : undefined,
+    })
   }
 
   function toggleDay(day: number) {
@@ -92,6 +100,20 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
               </button>
             ))}
           </div>
+        )}
+
+        {kind !== 'none' && (
+          <label class="field">
+            Ends (optional)
+            <span class="end-row">
+              <input type="date" value={end} min={start} onInput={(e) => setEnd(e.currentTarget.value)} />
+              {end && (
+                <button type="button" onClick={() => setEnd('')}>
+                  Clear
+                </button>
+              )}
+            </span>
+          </label>
         )}
 
         <div class="actions">

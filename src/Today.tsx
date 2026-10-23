@@ -128,7 +128,7 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
               />
               <button class="title" disabled={reordering} onClick={() => setEditing(t)}>
                 <span class="name">{t.title}</span>
-                <span class="repeat">{describeRepeat(t.repeat, t.start)}</span>
+                <span class="repeat">{describeRepeat(t.repeat, t.start, t.end)}</span>
                 {t.notes && <span class="notes">{t.notes}</span>}
               </button>
               {reordering && (

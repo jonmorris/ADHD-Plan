@@ -12,6 +12,7 @@ export type Task = {
   title: string
   start: string
   repeat: Repeat
+  end?: string // last day a repeating task can occur
   notes?: string
   removedOn?: string
 }
@@ -34,10 +35,7 @@ function ordinal(n: number): string {
   return n + suffix
 }
 
-// Short description of a schedule, e.g. "Every 2 weeks on Mon, Thu".
-export function describeRepeat(r: Repeat, start: string): string {
-  if (r.kind === 'none') return 'One-off'
-  const s = fromDateKey(start)
+function schedule(r: Exclude<Repeat, { kind: 'none' }>, s: Date): string {
   const every = (one: string, unit: string) => (r.every === 1 ? one : `Every ${r.every} ${unit}s`)
   switch (r.kind) {
     case 'daily':
@@ -49,6 +47,16 @@ export function describeRepeat(r: Repeat, start: string): string {
     case 'yearly':
       return `${every('Yearly', 'year')} on ${s.getDate()} ${MONTHS[s.getMonth()]}`
   }
+}
+
+// Short description of a schedule, e.g. "Every 2 weeks on Mon, Thu until 31 Dec".
+export function describeRepeat(r: Repeat, start: string, end?: string): string {
+  if (r.kind === 'none') return 'One-off'
+  const s = fromDateKey(start)
+  if (!end) return schedule(r, s)
+  const e = fromDateKey(end)
+  const year = e.getFullYear() === s.getFullYear() ? '' : ` ${e.getFullYear()}`
+  return `${schedule(r, s)} until ${e.getDate()} ${MONTHS[e.getMonth()]}${year}`
 }
 
 // Rough days between occurrences, for sorting: one-off first, then daily, then longer cycles.
@@ -108,7 +116,7 @@ export function doneOn(task: Task, log: Log): string | undefined {
 
 export function isDueOn(task: Task, key: string, log: Log, today: string): boolean {
   if (key < task.start || (task.removedOn && key >= task.removedOn)) return false
-  if (task.repeat.kind !== 'none') return occursOn(task.repeat, task.start, key)
+  if (task.repeat.kind !== 'none') return !(task.end && key > task.end) && occursOn(task.repeat, task.start, key)
   // One-off tasks carry over each day until done
   const done = doneOn(task, log)
   return done ? key <= done : key <= today
