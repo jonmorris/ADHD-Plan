@@ -15,6 +15,7 @@ type Props = {
 
 export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
   const [title, setTitle] = useState(task.title)
+  const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
   const [kind, setKind] = useState<Repeat['kind']>(task.repeat.kind)
   const [every, setEvery] = useState(task.repeat.kind === 'none' ? 1 : task.repeat.every)
@@ -26,7 +27,7 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
     e.preventDefault()
     const repeat: Repeat =
       kind === 'none' ? { kind } : kind === 'weekly' ? { kind, every, days } : { kind, every }
-    onSave({ ...task, title: title.trim(), start, repeat })
+    onSave({ ...task, title: title.trim(), notes: notes.trim() || undefined, start, repeat })
   }
 
   function toggleDay(day: number) {
@@ -41,6 +42,11 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
         <label class="field">
           Task
           <input value={title} onInput={(e) => setTitle(e.currentTarget.value)} required autoFocus />
+        </label>
+
+        <label class="field">
+          Notes
+          <textarea value={notes} onInput={(e) => setNotes(e.currentTarget.value)} rows={2} />
         </label>
 
         <label class="field">

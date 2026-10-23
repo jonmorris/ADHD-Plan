@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks'
-import { dayStats, isDueOn, nextState, stateOn, type Log, type State, type Task } from './tasks'
+import { dayStats, describeRepeat, isDueOn, nextState, stateOn, type Log, type State, type Task } from './tasks'
 import { TaskForm } from './TaskForm'
 
 type Props = {
@@ -62,7 +62,9 @@ export function Today({ tasks, log, today, saveTasks, saveLog }: Props) {
                 onClick={() => tap(t)}
               />
               <button class="title" onClick={() => setEditing(t)}>
-                {t.title}
+                <span class="name">{t.title}</span>
+                {t.repeat.kind !== 'none' && <span class="repeat">{describeRepeat(t.repeat, t.start)}</span>}
+                {t.notes && <span class="notes">{t.notes}</span>}
               </button>
             </li>
           )

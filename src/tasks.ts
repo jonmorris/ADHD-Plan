@@ -12,6 +12,7 @@ export type Task = {
   title: string
   start: string
   repeat: Repeat
+  notes?: string
   removedOn?: string
 }
 
@@ -23,6 +24,31 @@ export type Log = Record<string, Record<string, State>>
 
 export function nextState(s: State): State {
   return s === 0 ? 0.5 : s === 0.5 ? 1 : 0
+}
+
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function ordinal(n: number): string {
+  const suffix = n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'
+  return n + suffix
+}
+
+// Short description of a schedule, e.g. "Every 2 weeks on Mon, Thu". Empty for one-off tasks.
+export function describeRepeat(r: Repeat, start: string): string {
+  if (r.kind === 'none') return ''
+  const s = fromDateKey(start)
+  const every = (one: string, unit: string) => (r.every === 1 ? one : `Every ${r.every} ${unit}s`)
+  switch (r.kind) {
+    case 'daily':
+      return every('Daily', 'day')
+    case 'weekly':
+      return `${every('Weekly', 'week')} on ${r.days.map((d) => DAYS[d]).join(', ')}`
+    case 'monthly':
+      return `${every('Monthly', 'month')} on the ${ordinal(s.getDate())}`
+    case 'yearly':
+      return `${every('Yearly', 'year')} on ${s.getDate()} ${MONTHS[s.getMonth()]}`
+  }
 }
 
 function daysInMonth(d: Date): number {
