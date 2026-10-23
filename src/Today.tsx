@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks'
-import { addDays, fromDateKey } from './dates'
+import { addDays, fromDateKey, weekNumber } from './dates'
 import {
   dayStats,
   describeRepeat,
@@ -75,7 +75,18 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
         <button class="day-step" aria-label="Previous day" onClick={() => setDate(addDays(date, -1))}>
           ‹
         </button>
-        <h1>{dayLabel(date, today)}</h1>
+        <div class="day-title">
+          <h1>{dayLabel(date, today)}</h1>
+          <p class="date-line">
+            {fromDateKey(date).toLocaleDateString(undefined, {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}{' '}
+            · Week {weekNumber(fromDateKey(date))}
+          </p>
+        </div>
         <button
           class="day-step"
           aria-label="Next day"
@@ -94,18 +105,23 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
         )}
       </p>
 
-      {due.length > 1 && (
-        <div class="list-tools">
-          {reordering && order.length > 0 && (
-            <button class="link" onClick={() => saveOrder([])}>
-              Reset to default order
-            </button>
-          )}
+      <div class="list-tools">
+        {!reordering && (
+          <button class="primary add" onClick={addTask}>
+            + Add task
+          </button>
+        )}
+        {reordering && order.length > 0 && (
+          <button class="link" onClick={() => saveOrder([])}>
+            Reset to default order
+          </button>
+        )}
+        {due.length > 1 && (
           <button class={reordering ? 'primary' : ''} onClick={() => setReordering(!reordering)}>
             {reordering ? 'Done' : 'Reorder'}
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {due.length === 0 && (
         <p class="empty">
@@ -149,12 +165,6 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
           )
         })}
       </ul>
-
-      {!reordering && (
-        <button class="primary add" onClick={addTask}>
-          + Add task
-        </button>
-      )}
 
       {editing && (
         <TaskForm

@@ -43,7 +43,9 @@ export function App() {
             saveOrder={saveOrder}
           />
         )}
-        {tab === 'playbook' && <Playbook pages={pages} savePages={savePages} />}
+        {tab === 'playbook' && (
+          <Playbook pages={pages} savePages={savePages} tasks={tasks} saveTasks={saveTasks} today={today} />
+        )}
         {tab === 'analytics' && <Analytics tasks={tasks} log={log} today={today} />}
         <button class="export" onClick={exportData}>
           Export backup

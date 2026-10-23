@@ -1,12 +1,17 @@
 import { useState } from 'preact/hooks'
+import { BulkAdd } from './BulkAdd'
 import { parseNote, type Page } from './notes'
+import type { Task } from './tasks'
 
 type Props = {
   pages: Page[]
   savePages: (pages: Page[]) => void
+  tasks: Task[]
+  saveTasks: (tasks: Task[]) => void
+  today: string
 }
 
-export function Playbook({ pages, savePages }: Props) {
+export function Playbook({ pages, savePages, tasks, saveTasks, today }: Props) {
   const [openId, setOpenId] = useState<string>()
   const [draft, setDraft] = useState<Page>()
 
@@ -41,7 +46,7 @@ export function Playbook({ pages, savePages }: Props) {
         <textarea
           value={draft.body}
           onInput={(e) => setDraft({ ...draft, body: e.currentTarget.value })}
-          placeholder={'Write anything.\n\n# Heading\n- List item'}
+          placeholder={'Write anything.\n\n# Heading\n- List item\n- [ ] A task to add — Daily'}
           aria-label="Page text"
           rows={16}
         />
@@ -78,6 +83,7 @@ export function Playbook({ pages, savePages }: Props) {
             <p>{b.text}</p>
           ),
         )}
+        <BulkAdd body={open.body} tasks={tasks} today={today} saveTasks={saveTasks} />
         <button class="danger" onClick={() => remove(open)}>
           Delete page
         </button>

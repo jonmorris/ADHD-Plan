@@ -23,3 +23,9 @@ export function daysBetween(a: Date, b: Date): number {
       86_400_000,
   )
 }
+
+// US week number: weeks start on Sunday and week 1 is the week containing 1 January.
+export function weekNumber(d: Date): number {
+  const jan1 = new Date(d.getFullYear(), 0, 1)
+  return Math.floor((daysBetween(jan1, d) + jan1.getDay()) / 7) + 1
+}
