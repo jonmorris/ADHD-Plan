@@ -1,7 +1,9 @@
 import { useState } from 'preact/hooks'
+import { parseTaskLines } from './bulk'
 import { BulkAdd } from './BulkAdd'
 import { parseNote, type Page } from './notes'
-import type { Task } from './tasks'
+import { PLANS, disablePlan, enablePlan, isPlanOn, type Plan } from './plans'
+import { describeRepeat, type Task } from './tasks'
 
 type Props = {
   pages: Page[]
@@ -14,8 +16,29 @@ type Props = {
 export function Playbook({ pages, savePages, tasks, saveTasks, today }: Props) {
   const [openId, setOpenId] = useState<string>()
   const [draft, setDraft] = useState<Page>()
+  const [openPlanId, setOpenPlanId] = useState<string>()
 
   const open = pages.find((p) => p.id === openId)
+  const openPlan = PLANS.find((p) => p.id === openPlanId)
+
+  function togglePlan(plan: Plan) {
+    if (!isPlanOn(plan.id, tasks)) return saveTasks(enablePlan(plan, tasks, today))
+    if (!confirm(`Turn off ${plan.title}? Its tasks leave your list from today. Their history stays in Analytics.`)) return
+    saveTasks(disablePlan(plan.id, tasks, today))
+  }
+
+  function planSwitch(plan: Plan) {
+    const on = isPlanOn(plan.id, tasks)
+    return (
+      <button
+        role="switch"
+        class="switch"
+        aria-checked={on}
+        aria-label={`${plan.title} plan`}
+        onClick={() => togglePlan(plan)}
+      />
+    )
+  }
 
   function save(e: Event) {
     e.preventDefault()
@@ -62,6 +85,46 @@ export function Playbook({ pages, savePages, tasks, saveTasks, today }: Props) {
     )
   }
 
+  if (openPlan) {
+    return (
+      <article class="page">
+        <div class="page-bar">
+          <button onClick={() => setOpenPlanId(undefined)}>‹ Playbook</button>
+        </div>
+        <div class="plan-head">
+          <h1>{openPlan.title}</h1>
+          {planSwitch(openPlan)}
+        </div>
+        <p>{openPlan.summary}</p>
+        <ul>
+          {openPlan.tips.map((tip) => (
+            <li>{tip}</li>
+          ))}
+        </ul>
+        <h2>Tasks it adds</h2>
+        <ul class="bulk-list">
+          {parseTaskLines(openPlan.body, today).flatMap((item) =>
+            'task' in item
+              ? [
+                  <li>
+                    <span class="name">{item.task.title}</span>
+                    <span class="detail">{describeRepeat(item.task.repeat, item.task.start, item.task.end)}</span>
+                    {item.task.notes && <span class="detail">{item.task.notes}</span>}
+                  </li>,
+                ]
+              : [],
+          )}
+        </ul>
+        <p class="source">
+          Source:{' '}
+          <a href={openPlan.source.url} target="_blank" rel="noopener">
+            {openPlan.source.label}
+          </a>
+        </p>
+      </article>
+    )
+  }
+
   if (open) {
     return (
       <article class="page">
@@ -94,6 +157,21 @@ export function Playbook({ pages, savePages, tasks, saveTasks, today }: Props) {
   return (
     <>
       <h1>Playbook</h1>
+
+      <h2>Plans</h2>
+      <ul class="plans">
+        {PLANS.map((plan) => (
+          <li key={plan.id}>
+            <button class="plan-open" onClick={() => setOpenPlanId(plan.id)}>
+              <span class="name">{plan.title}</span>
+              <span class="detail">{plan.summary}</span>
+            </button>
+            {planSwitch(plan)}
+          </li>
+        ))}
+      </ul>
+
+      <h2>Your pages</h2>
       {pages.length === 0 && <p class="empty">Write down what works for you, so it's here when you need it.</p>}
       <ul class="pages">
         {pages.map((p) => (

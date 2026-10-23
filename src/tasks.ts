@@ -14,6 +14,7 @@ export type Task = {
   repeat: Repeat
   end?: string // last day a repeating task can occur
   notes?: string
+  plan?: string // id of the built-in plan that added it
   removedOn?: string
 }
 
