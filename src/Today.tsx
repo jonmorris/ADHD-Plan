@@ -1,5 +1,6 @@
 import { useRef, useState } from 'preact/hooks'
 import { addDays, fromDateKey, weekNumber } from './dates'
+import { groupOf, sections, sortGroups, sourceOf } from './groups'
 import {
   dayStats,
   describeRepeat,
@@ -17,10 +18,12 @@ type Props = {
   tasks: Task[]
   log: Log
   order: string[]
+  groupOrder: string[]
   today: string
   saveTasks: (tasks: Task[]) => void
   saveLog: (log: Log) => void
   saveOrder: (order: string[]) => void
+  saveGroupOrder: (order: string[]) => void
 }
 
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
@@ -33,13 +36,29 @@ function dayLabel(date: string, today: string) {
   return fromDateKey(date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder }: Props) {
+export function Today({
+  tasks,
+  log,
+  order,
+  groupOrder,
+  today,
+  saveTasks,
+  saveLog,
+  saveOrder,
+  saveGroupOrder,
+}: Props) {
   const [date, setDate] = useState(today)
   const [editing, setEditing] = useState<Task>()
   const [reordering, setReordering] = useState(false)
 
   const sorted = sortTasks(tasks, order)
   const due = sorted.filter((t) => isDueOn(t, date, log, today))
+  const daySections = sections(due, groupOrder)
+  const namedSections = daySections.filter((s) => s.group)
+  const allGroups = sortGroups(
+    tasks.filter((t) => !t.removedOn).map(groupOf),
+    groupOrder,
+  )
   const { done } = dayStats(tasks, log, date, today)
   const future = date > today
 
@@ -72,17 +91,40 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
 
   function remove(task: Task) {
     if (!confirm(`Remove "${task.title}"? Its history stays in Analytics.`)) return
-    saveTasks(tasks.map((t) => (t.id === task.id ? { ...t, removedOn: today } : t)))
+    // A removed plan task stays removed if the plan is turned off and on again
+    saveTasks(tasks.map((t) => (t.id === task.id ? { ...t, removedOn: today, dismissed: !!t.plan || undefined } : t)))
     setEditing(undefined)
   }
 
-  // Swap a task with its neighbour in this day's list, saving the order of every task.
-  function move(index: number, step: -1 | 1) {
+  // Swap two items in a full ordering, so the order of everything not shown today is kept.
+  function swap<T>(all: T[], a: T, b: T): T[] {
+    const next = [...all]
+    const i = next.indexOf(a)
+    const j = next.indexOf(b)
+    ;[next[i], next[j]] = [next[j], next[i]]
+    return next
+  }
+
+  function moveTask(list: Task[], index: number, step: -1 | 1) {
     const ids = sorted.map((t) => t.id)
-    const a = ids.indexOf(due[index].id)
-    const b = ids.indexOf(due[index + step].id)
-    ;[ids[a], ids[b]] = [ids[b], ids[a]]
-    saveOrder(ids)
+    saveOrder(swap(ids, list[index].id, list[index + step].id))
+  }
+
+  function moveGroup(index: number, step: -1 | 1) {
+    saveGroupOrder(swap(allGroups, namedSections[index].group, namedSections[index + step].group))
+  }
+
+  function moveButtons(label: string, first: boolean, last: boolean, move: (step: -1 | 1) => void) {
+    return (
+      <span class="move">
+        <button aria-label={`Move ${label} up`} disabled={first} onClick={() => move(-1)}>
+          ▲
+        </button>
+        <button aria-label={`Move ${label} down`} disabled={last} onClick={() => move(1)}>
+          ▼
+        </button>
+      </span>
+    )
   }
 
   function addTask() {
@@ -126,8 +168,14 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
             + Add task
           </button>
         )}
-        {reordering && order.length > 0 && (
-          <button class="link" onClick={() => saveOrder([])}>
+        {reordering && (order.length > 0 || groupOrder.length > 0) && (
+          <button
+            class="link"
+            onClick={() => {
+              saveOrder([])
+              saveGroupOrder([])
+            }}
+          >
             Reset to default order
           </button>
         )}
@@ -148,56 +196,67 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
         </p>
       )}
 
-      <ul class="tasks">
-        {due.map((t, i) => {
-          const state = stateOn(t, date, log)
-          return (
-            <li
-              key={t.id}
-              class={`c-${t.repeat.kind}${state === 1 ? ' done' : state === -1 ? ' not-done' : ''}`}
-            >
-              <button
-                role="checkbox"
-                class={`check ${CHECK_CLASS[state]}`}
-                aria-checked={state === 1 ? 'true' : state === 0.5 ? 'mixed' : 'false'}
-                aria-label={`${t.title}: ${LABELS[state]}`}
-                disabled={reordering || future}
-                onClick={() => tap(t)}
-                onPointerDown={() => startHold(t)}
-                onPointerUp={() => clearTimeout(holdTimer.current)}
-                onPointerLeave={() => clearTimeout(holdTimer.current)}
-                onPointerCancel={() => clearTimeout(holdTimer.current)}
-                onContextMenu={(e) => e.preventDefault()}
-              />
-              <button class="title" disabled={reordering} onClick={() => setEditing(t)}>
-                <span class="name">{t.title}</span>
-                <span class="repeat">{describeRepeat(t.repeat, t.start, t.end)}</span>
-                {t.notes && <span class="notes">{t.notes}</span>}
-              </button>
-              {reordering && (
-                <span class="move">
-                  <button aria-label={`Move ${t.title} up`} disabled={i === 0} onClick={() => move(i, -1)}>
-                    ↑
-                  </button>
-                  <button
-                    aria-label={`Move ${t.title} down`}
-                    disabled={i === due.length - 1}
-                    onClick={() => move(i, 1)}
+      {daySections.map((section) => {
+        const g = namedSections.indexOf(section)
+        return (
+          <section key={section.group || '(none)'}>
+            {section.group && (
+              <div class="group-head">
+                <h2>{section.group}</h2>
+                {reordering &&
+                  moveButtons(`group ${section.group}`, g === 0, g === namedSections.length - 1, (step) =>
+                    moveGroup(g, step),
+                  )}
+              </div>
+            )}
+            <ul class="tasks">
+              {section.tasks.map((t, i) => {
+                const state = stateOn(t, date, log)
+                const source = sourceOf(t)
+                return (
+                  <li
+                    key={t.id}
+                    class={`c-${t.repeat.kind}${state === 1 ? ' done' : state === -1 ? ' not-done' : ''}`}
                   >
-                    ↓
-                  </button>
-                </span>
-              )}
-            </li>
-          )
-        })}
-      </ul>
+                    <button
+                      role="checkbox"
+                      class={`check ${CHECK_CLASS[state]}`}
+                      aria-checked={state === 1 ? 'true' : state === 0.5 ? 'mixed' : 'false'}
+                      aria-label={`${t.title}: ${LABELS[state]}`}
+                      disabled={reordering || future}
+                      onClick={() => tap(t)}
+                      onPointerDown={() => startHold(t)}
+                      onPointerUp={() => clearTimeout(holdTimer.current)}
+                      onPointerLeave={() => clearTimeout(holdTimer.current)}
+                      onPointerCancel={() => clearTimeout(holdTimer.current)}
+                      onContextMenu={(e) => e.preventDefault()}
+                    />
+                    <button class="title" disabled={reordering} onClick={() => setEditing(t)}>
+                      <span class="name">{t.title}</span>
+                      <span class="repeat">
+                        {describeRepeat(t.repeat, t.start, t.end)}
+                        {source && <span class="tag">{source}</span>}
+                      </span>
+                      {t.notes && <span class="notes">{t.notes}</span>}
+                    </button>
+                    {reordering &&
+                      moveButtons(t.title, i === 0, i === section.tasks.length - 1, (step) =>
+                        moveTask(section.tasks, i, step),
+                      )}
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        )
+      })}
 
       {due.length > 0 && !future && <p class="hint">Press and hold a box to mark it ✕ (didn't do it).</p>}
 
       {editing && (
         <TaskForm
           task={editing}
+          groups={allGroups}
           isNew={!tasks.some((t) => t.id === editing.id)}
           onSave={save}
           onRemove={() => remove(editing)}

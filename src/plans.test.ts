@@ -29,6 +29,7 @@ describe('turning a plan on and off', () => {
     const added = tasks.filter((t) => t.plan === 'clean-mama')
     expect(added).toHaveLength(10)
     expect(added.every((t) => t.id && t.start === today)).toBe(true)
+    expect(added.every((t) => t.group === 'Clean Mama' && t.source === 'Clean Mama')).toBe(true)
     expect(tasks.filter((t) => t.title === 'Laundry load')).toEqual([mine])
     expect(isPlanOn('clean-mama', tasks)).toBe(true)
   })
@@ -44,5 +45,14 @@ describe('turning a plan on and off', () => {
     const off = disablePlan('clean-mama', enablePlan(cleanMama, [], today), today)
     const on = enablePlan(cleanMama, off, '2026-10-24')
     expect(on.filter((t) => t.plan === 'clean-mama' && !t.removedOn)).toHaveLength(11)
+  })
+
+  it('does not bring back a task the user removed when the plan is turned off and on', () => {
+    const on = enablePlan(cleanMama, [], today)
+    const removed = on.map((t) => (t.title === 'Dusting' ? { ...t, removedOn: today, dismissed: true } : t))
+    const again = enablePlan(cleanMama, disablePlan('clean-mama', removed, today), '2026-10-24')
+    const active = again.filter((t) => !t.removedOn).map((t) => t.title)
+    expect(active).toHaveLength(10)
+    expect(active).not.toContain('Dusting')
   })
 })

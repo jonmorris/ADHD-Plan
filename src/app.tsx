@@ -15,13 +15,14 @@ export function App() {
   const [log, saveLog] = usePersisted<Log>('log', {})
   const [pages, savePages] = usePersisted<Page[]>('pages', [])
   const [order, saveOrder] = usePersisted<string[]>('order', [])
+  const [groupOrder, saveGroupOrder] = usePersisted<string[]>('groupOrder', [])
 
-  if (!tasks || !log || !pages || !order) return null
+  if (!tasks || !log || !pages || !order || !groupOrder) return null
 
   const today = toDateKey(new Date())
 
   function exportData() {
-    const blob = new Blob([JSON.stringify({ tasks, log, pages, order }, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify({ tasks, log, pages, order, groupOrder }, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `adhd-plan-${today}.json`
@@ -37,10 +38,12 @@ export function App() {
             tasks={tasks}
             log={log}
             order={order}
+            groupOrder={groupOrder}
             today={today}
             saveTasks={saveTasks}
             saveLog={saveLog}
             saveOrder={saveOrder}
+            saveGroupOrder={saveGroupOrder}
           />
         )}
         {tab === 'playbook' && (

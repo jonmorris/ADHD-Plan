@@ -43,10 +43,14 @@ export function isPlanOn(planId: string, tasks: Task[]): boolean {
   return tasks.some((t) => t.plan === planId && !t.removedOn)
 }
 
-// Adds the plan's tasks, skipping names already on the list.
+// Adds the plan's tasks in a group named after it, skipping names already on the list
+// and tasks from this plan the user removed.
 export function enablePlan(plan: Plan, tasks: Task[], today: string): Task[] {
+  const dismissed = new Set(tasks.filter((t) => t.plan === plan.id && t.dismissed).map((t) => t.title))
   const added = planBulkAdd(parseTaskLines(plan.body, today), tasks).flatMap((p) =>
-    p.status === 'add' ? [{ id: crypto.randomUUID(), ...p.task, plan: plan.id }] : [],
+    p.status === 'add' && !dismissed.has(p.task.title)
+      ? [{ id: crypto.randomUUID(), ...p.task, plan: plan.id, source: plan.title, group: plan.title }]
+      : [],
   )
   return [...tasks, ...added]
 }

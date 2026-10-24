@@ -16,6 +16,9 @@ export type Task = {
   notes?: string
   allowHalf?: boolean // tap once for half done, twice for done
   plan?: string // id of the built-in plan that added it
+  source?: string // name of the plan or Playbook page it came from
+  group?: string // '' = no group (see groups.ts)
+  dismissed?: boolean // removed by the user, so turning its plan back on won't re-add it
   removedOn?: string
 }
 
