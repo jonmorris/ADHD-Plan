@@ -18,6 +18,7 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
   const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
   const [end, setEnd] = useState(task.end ?? '')
+  const [allowHalf, setAllowHalf] = useState(!!task.allowHalf)
   const [kind, setKind] = useState<Repeat['kind']>(task.repeat.kind)
   const [every, setEvery] = useState(task.repeat.kind === 'none' ? 1 : task.repeat.every)
   const [days, setDays] = useState(
@@ -35,6 +36,7 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
       start,
       repeat,
       end: kind !== 'none' && end ? end : undefined,
+      allowHalf: allowHalf || undefined,
     })
   }
 
@@ -115,6 +117,14 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
             </span>
           </label>
         )}
+
+        <label class="check-field">
+          <input type="checkbox" checked={allowHalf} onChange={(e) => setAllowHalf(e.currentTarget.checked)} />
+          <span>
+            Allow half done
+            <small>Tap once for half done, twice for done</small>
+          </span>
+        </label>
 
         <div class="actions">
           {!isNew && (

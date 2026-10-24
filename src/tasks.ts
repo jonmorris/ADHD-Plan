@@ -14,6 +14,7 @@ export type Task = {
   repeat: Repeat
   end?: string // last day a repeating task can occur
   notes?: string
+  allowHalf?: boolean // tap once for half done, twice for done
   plan?: string // id of the built-in plan that added it
   removedOn?: string
 }
@@ -24,7 +25,8 @@ export type State = 0 | 0.5 | 1
 // log[date][taskId] = state that day. Nothing is ever deleted from it.
 export type Log = Record<string, Record<string, State>>
 
-export function nextState(s: State): State {
+export function nextState(s: State, allowHalf: boolean): State {
+  if (!allowHalf) return s === 1 ? 0 : 1
   return s === 0 ? 0.5 : s === 0.5 ? 1 : 0
 }
 

@@ -102,10 +102,16 @@ describe('end date', () => {
 })
 
 describe('nextState', () => {
-  it('cycles empty → half → done → empty', () => {
-    expect(nextState(0)).toBe(0.5)
-    expect(nextState(0.5)).toBe(1)
-    expect(nextState(1)).toBe(0)
+  it('cycles empty → half → done → empty when half done is allowed', () => {
+    expect(nextState(0, true)).toBe(0.5)
+    expect(nextState(0.5, true)).toBe(1)
+    expect(nextState(1, true)).toBe(0)
+  })
+
+  it('goes straight between empty and done otherwise, finishing a task left half done', () => {
+    expect(nextState(0, false)).toBe(1)
+    expect(nextState(1, false)).toBe(0)
+    expect(nextState(0.5, false)).toBe(1)
   })
 })
 
