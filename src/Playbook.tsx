@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks'
+import { useBack } from './back'
 import { BulkAdd } from './BulkAdd'
 import { MoveButtons } from './MoveButtons'
 import { parseNote, type Page } from './notes'
@@ -35,6 +36,14 @@ export function Playbook({ pages, savePages, plans, savePlans, tasks, saveTasks,
 
   const open = pages.find((p) => p.id === openId)
   const openPlan = plans.find((p) => p.id === openPlanId)
+  useBack(!!open, () => setOpenId(undefined))
+  useBack(!!openPlan, () => {
+    setOpenPlanId(undefined)
+    setReordering(false)
+  })
+  useBack(!!draft, () => setDraft(undefined))
+  useBack(!!planDraft, () => setPlanDraft(undefined))
+  useBack(!!editingItem, () => setEditingItem(undefined))
   // Items on a switched-on plan that aren't on the list (enablePlan skips ones already there or removed)
   const newTasks =
     openPlan && isPlanOn(openPlan.id, tasks) ? enablePlan(openPlan, tasks, today).length - tasks.length : 0

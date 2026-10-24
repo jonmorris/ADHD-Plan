@@ -1,4 +1,5 @@
 import { useRef, useState } from 'preact/hooks'
+import { useBack } from './back'
 import { addDays, fromDateKey, weekNumber } from './dates'
 import { groupOf, sections, sortGroups, sourceOf } from './groups'
 import {
@@ -59,6 +60,7 @@ export function Today({
   const [date, setDate] = useState(today)
   const [editing, setEditing] = useState<Task>()
   const [reordering, setReordering] = useState(false)
+  useBack(!!editing, () => setEditing(undefined))
 
   const sorted = sortTasks(tasks, order, itemIndex(plans))
   const due = sorted.filter((t) => isDueOn(t, date, log, today))
