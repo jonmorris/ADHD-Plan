@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { parseTaskLines } from './bulk'
-import { PLANS, disablePlan, enablePlan, isPlanOn } from './plans'
-import type { Task } from './tasks'
+import { PLANS, disablePlan, enablePlan, isPlanOn, itemIndex, removeItem, renamePlan, seedPlans, updateItem } from './plans'
+import { sortTasks, type Task } from './tasks'
 
 const today = '2026-10-23'
-const cleanMama = PLANS.find((p) => p.id === 'clean-mama')!
+const plans = seedPlans(today)
+const cleanMama = plans.find((p) => p.id === 'clean-mama')!
 
 describe('built-in plans', () => {
   it('every plan line reads without errors', () => {
@@ -21,14 +22,14 @@ describe('built-in plans', () => {
   })
 
   it('Morning routine adds six daily tasks in its own group', () => {
-    const plan = PLANS.find((p) => p.id === 'morning-routine')!
+    const plan = plans.find((p) => p.id === 'morning-routine')!
     const tasks = enablePlan(plan, [], today)
     expect(tasks.map((t) => t.title)).toEqual(['Wake up at 5', 'Physical activity', 'Read', 'Journal', 'Meditate', 'No phone'])
     expect(tasks.every((t) => t.repeat.kind === 'daily' && t.group === 'Morning routine')).toBe(true)
   })
 
   it('ADHD protection has the Sunday planning tasks and the vices reminder', () => {
-    const plan = PLANS.find((p) => p.id === 'adhd-protection')!
+    const plan = plans.find((p) => p.id === 'adhd-protection')!
     const tasks = enablePlan(plan, [], today)
     const sunday = tasks.filter((t) => t.repeat.kind === 'weekly' && t.repeat.days.join() === '0')
     expect(sunday.map((t) => t.title)).toEqual(['Time block the week', 'Weekly review', 'Check bills and finances', 'Meal prep'])
@@ -40,7 +41,7 @@ describe('built-in plans', () => {
   })
 
   it('Lifting has lift A on Monday, B on Wednesday and C on Friday', () => {
-    const plan = PLANS.find((p) => p.id === 'lifting')!
+    const plan = plans.find((p) => p.id === 'lifting')!
     const tasks = enablePlan(plan, [], today)
     expect(tasks.map((t) => [t.title, t.repeat.kind === 'weekly' && t.repeat.days])).toEqual([
       ['Lift A', [1]],
@@ -77,7 +78,7 @@ describe('turning a plan on and off', () => {
   })
 
   it('can add tasks added to a plan since it was turned on, without duplicating the rest', () => {
-    const older = { ...cleanMama, body: cleanMama.body.split('\n').slice(0, 2).join('\n') }
+    const older = { ...cleanMama, items: cleanMama.items.slice(0, 2) }
     const on = enablePlan(older, [], today)
     expect(on).toHaveLength(2)
     const updated = enablePlan(cleanMama, on, today)
@@ -92,5 +93,63 @@ describe('turning a plan on and off', () => {
     const active = again.filter((t) => !t.removedOn).map((t) => t.title)
     expect(active).toHaveLength(10)
     expect(active).not.toContain('Dusting')
+  })
+})
+
+describe('editing a plan', () => {
+  const lifting = plans.find((p) => p.id === 'lifting')!
+  const liftA = lifting.items[0]
+
+  it('links added tasks to their plan item', () => {
+    const tasks = enablePlan(lifting, [], today)
+    expect(tasks.map((t) => t.planItem)).toEqual(lifting.items.map((i) => i.id))
+  })
+
+  it('updates the task on the list when its item is edited, keeping its id and start', () => {
+    const tasks = enablePlan(lifting, [], today)
+    const edited = { ...liftA, title: 'Lift A (heavy)', repeat: { kind: 'weekly' as const, every: 1, days: [2] } }
+    const updated = updateItem('lifting', liftA, edited, tasks)
+    expect(updated[0]).toEqual({ ...tasks[0], title: 'Lift A (heavy)', repeat: edited.repeat })
+    expect(updated.slice(1)).toEqual(tasks.slice(1))
+  })
+
+  it('matches tasks added before items had ids by title', () => {
+    const old: Task = { id: 'old', title: 'Lift A', start: '2026-01-01', repeat: liftA.repeat, plan: 'lifting' }
+    const [updated] = updateItem('lifting', liftA, { ...liftA, notes: 'Squat, bench' }, [old])
+    expect(updated).toEqual({ ...old, notes: 'Squat, bench', planItem: liftA.id })
+  })
+
+  it('moves the start only when the item start date is changed to a later day', () => {
+    const tasks = enablePlan(lifting, [], today)
+    expect(updateItem('lifting', liftA, { ...liftA, start: '2026-11-02' }, tasks)[0].start).toBe('2026-11-02')
+    expect(updateItem('lifting', liftA, { ...liftA, start: '2026-01-01' }, tasks)[0].start).toBe(today)
+  })
+
+  it('leaves removed tasks alone', () => {
+    const tasks = disablePlan('lifting', enablePlan(lifting, [], today), today)
+    expect(updateItem('lifting', liftA, { ...liftA, title: 'New' }, tasks)).toEqual(tasks)
+  })
+
+  it('removes the task from today on when its item is deleted', () => {
+    const tasks = removeItem('lifting', liftA, enablePlan(lifting, [], today), '2026-10-24')
+    expect(tasks.map((t) => t.removedOn)).toEqual(['2026-10-24', undefined, undefined])
+  })
+
+  it('renames the group and tag of its tasks with the plan', () => {
+    const tasks = renamePlan(lifting, 'Gym', enablePlan(lifting, [], today))
+    expect(tasks.every((t) => t.group === 'Gym' && t.source === 'Gym')).toBe(true)
+  })
+
+  it('does not re-add an item whose task was renamed on Today', () => {
+    const tasks = enablePlan(lifting, [], today).map((t, i) => (i === 0 ? { ...t, title: 'Legs' } : t))
+    expect(enablePlan(lifting, tasks, today)).toEqual(tasks)
+  })
+
+  it('orders plan tasks the way the plan lists them, ahead of cadence', () => {
+    const reordered = { ...cleanMama, items: [...cleanMama.items].reverse() }
+    const tasks = enablePlan(cleanMama, [], today)
+    const sorted = sortTasks(tasks, [], itemIndex([reordered]))
+    expect(sorted.map((t) => t.title)).toEqual(reordered.items.map((i) => i.title))
+    expect(sortTasks(tasks, [tasks[3].id], itemIndex([reordered]))[0]).toBe(tasks[3])
   })
 })

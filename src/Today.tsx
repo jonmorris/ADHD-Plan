@@ -13,10 +13,13 @@ import {
   type State,
   type Task,
 } from './tasks'
+import { MoveButtons } from './MoveButtons'
+import { itemIndex, type Plan } from './plans'
 import { TaskForm } from './TaskForm'
 
 type Props = {
   tasks: Task[]
+  plans: Plan[]
   log: Log
   order: string[]
   groupOrder: string[]
@@ -32,20 +35,6 @@ type Props = {
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
 const CHECK_CLASS: Record<State, string> = { [-1]: 'sx', 0: 's0', 0.5: 's1', 1: 's2' }
 
-// Up arrow; the down button rotates it
-const ARROW = (
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-    <path
-      d="M12 19V5M5 12l7-7 7 7"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="3"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-  </svg>
-)
-
 function dayLabel(date: string, today: string) {
   if (date === today) return 'Today'
   if (date === addDays(today, -1)) return 'Yesterday'
@@ -55,6 +44,7 @@ function dayLabel(date: string, today: string) {
 
 export function Today({
   tasks,
+  plans,
   log,
   order,
   groupOrder,
@@ -70,7 +60,7 @@ export function Today({
   const [editing, setEditing] = useState<Task>()
   const [reordering, setReordering] = useState(false)
 
-  const sorted = sortTasks(tasks, order)
+  const sorted = sortTasks(tasks, order, itemIndex(plans))
   const due = sorted.filter((t) => isDueOn(t, date, log, today))
   const daySections = sections(due, groupOrder)
   const namedSections = daySections.filter((s) => s.group)
@@ -133,19 +123,6 @@ export function Today({
 
   function moveGroup(index: number, step: -1 | 1) {
     saveGroupOrder(swap(allGroups, namedSections[index].group, namedSections[index + step].group))
-  }
-
-  function moveButtons(label: string, first: boolean, last: boolean, move: (step: -1 | 1) => void) {
-    return (
-      <span class="move">
-        <button aria-label={`Move ${label} up`} disabled={first} onClick={() => move(-1)}>
-          {ARROW}
-        </button>
-        <button aria-label={`Move ${label} down`} class="down" disabled={last} onClick={() => move(1)}>
-          {ARROW}
-        </button>
-      </span>
-    )
   }
 
   function toggleCollapsed(group: string) {
@@ -244,10 +221,14 @@ export function Today({
                     </span>
                   </button>
                 </h2>
-                {reordering &&
-                  moveButtons(`group ${section.group}`, g === 0, g === namedSections.length - 1, (step) =>
-                    moveGroup(g, step),
-                  )}
+                {reordering && (
+                  <MoveButtons
+                    label={`group ${section.group}`}
+                    first={g === 0}
+                    last={g === namedSections.length - 1}
+                    move={(step) => moveGroup(g, step)}
+                  />
+                )}
               </div>
             )}
             <ul class="tasks" hidden={isCollapsed}>
@@ -280,10 +261,14 @@ export function Today({
                       </span>
                       {t.notes && <span class="notes">{t.notes}</span>}
                     </button>
-                    {reordering &&
-                      moveButtons(t.title, i === 0, i === section.tasks.length - 1, (step) =>
-                        moveTask(section.tasks, i, step),
-                      )}
+                    {reordering && (
+                      <MoveButtons
+                        label={t.title}
+                        first={i === 0}
+                        last={i === section.tasks.length - 1}
+                        move={(step) => moveTask(section.tasks, i, step)}
+                      />
+                    )}
                   </li>
                 )
               })}
