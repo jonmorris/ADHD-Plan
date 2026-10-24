@@ -16,8 +16,9 @@ export function App() {
   const [pages, savePages] = usePersisted<Page[]>('pages', [])
   const [order, saveOrder] = usePersisted<string[]>('order', [])
   const [groupOrder, saveGroupOrder] = usePersisted<string[]>('groupOrder', [])
+  const [collapsed, saveCollapsed] = usePersisted<string[]>('collapsed', [])
 
-  if (!tasks || !log || !pages || !order || !groupOrder) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed) return null
 
   const today = toDateKey(new Date())
 
@@ -39,11 +40,13 @@ export function App() {
             log={log}
             order={order}
             groupOrder={groupOrder}
+            collapsed={collapsed}
             today={today}
             saveTasks={saveTasks}
             saveLog={saveLog}
             saveOrder={saveOrder}
             saveGroupOrder={saveGroupOrder}
+            saveCollapsed={saveCollapsed}
           />
         )}
         {tab === 'playbook' && (
