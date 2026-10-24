@@ -4,14 +4,15 @@ import { fromDateKey } from './dates'
 import { describeRepeat, type Task } from './tasks'
 
 type Props = {
+  title: string
   body: string
   tasks: Task[]
   today: string
   saveTasks: (tasks: Task[]) => void
 }
 
-// Adds the page's "- [ ] Title — Cadence" lines as tasks, after a preview.
-export function BulkAdd({ body, tasks, today, saveTasks }: Props) {
+// Adds the page's "- [ ] Title — Cadence" lines as tasks in a group named after the page, after a preview.
+export function BulkAdd({ title, body, tasks, today, saveTasks }: Props) {
   const [previewing, setPreviewing] = useState(false)
   const [added, setAdded] = useState<number>()
 
@@ -20,7 +21,7 @@ export function BulkAdd({ body, tasks, today, saveTasks }: Props) {
   if (plan.length === 0) return null
 
   function add() {
-    saveTasks([...tasks, ...toAdd.map((t) => ({ id: crypto.randomUUID(), ...t }))])
+    saveTasks([...tasks, ...toAdd.map((t) => ({ id: crypto.randomUUID(), ...t, source: title, group: title }))])
     setAdded(toAdd.length)
     setPreviewing(false)
   }

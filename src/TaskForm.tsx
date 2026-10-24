@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks'
 import { fromDateKey } from './dates'
+import { groupOf } from './groups'
 import type { Repeat, Task } from './tasks'
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -7,18 +8,23 @@ const UNITS = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }
 
 type Props = {
   task: Task
+  groups: string[]
   isNew: boolean
   onSave: (task: Task) => void
   onRemove: () => void
   onClose: () => void
 }
 
-export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
+const NEW_GROUP = '\u0000new'
+
+export function TaskForm({ task, groups, isNew, onSave, onRemove, onClose }: Props) {
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
   const [end, setEnd] = useState(task.end ?? '')
   const [allowHalf, setAllowHalf] = useState(!!task.allowHalf)
+  const [group, setGroup] = useState(groupOf(task))
+  const [newGroup, setNewGroup] = useState('')
   const [kind, setKind] = useState<Repeat['kind']>(task.repeat.kind)
   const [every, setEvery] = useState(task.repeat.kind === 'none' ? 1 : task.repeat.every)
   const [days, setDays] = useState(
@@ -37,6 +43,7 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
       repeat,
       end: kind !== 'none' && end ? end : undefined,
       allowHalf: allowHalf || undefined,
+      group: group === NEW_GROUP ? newGroup.trim() : group,
     })
   }
 
@@ -115,6 +122,24 @@ export function TaskForm({ task, isNew, onSave, onRemove, onClose }: Props) {
                 </button>
               )}
             </span>
+          </label>
+        )}
+
+        <label class="field">
+          Group
+          <select value={group} onChange={(e) => setGroup(e.currentTarget.value)}>
+            <option value="">No group</option>
+            {groups.map((g) => (
+              <option value={g}>{g}</option>
+            ))}
+            <option value={NEW_GROUP}>New group…</option>
+          </select>
+        </label>
+
+        {group === NEW_GROUP && (
+          <label class="field">
+            New group name
+            <input value={newGroup} onInput={(e) => setNewGroup(e.currentTarget.value)} required />
           </label>
         )}
 

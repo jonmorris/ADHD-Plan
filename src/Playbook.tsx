@@ -146,7 +146,7 @@ export function Playbook({ pages, savePages, tasks, saveTasks, today }: Props) {
             <p>{b.text}</p>
           ),
         )}
-        <BulkAdd body={open.body} tasks={tasks} today={today} saveTasks={saveTasks} />
+        <BulkAdd title={open.title} body={open.body} tasks={tasks} today={today} saveTasks={saveTasks} />
         <button class="danger" onClick={() => remove(open)}>
           Delete page
         </button>
