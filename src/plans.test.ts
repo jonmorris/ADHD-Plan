@@ -26,6 +26,17 @@ describe('built-in plans', () => {
     expect(tasks.map((t) => t.title)).toEqual(['Wake up at 5', 'Physical activity', 'Read', 'Journal', 'Meditate', 'No phone'])
     expect(tasks.every((t) => t.repeat.kind === 'daily' && t.group === 'Morning routine')).toBe(true)
   })
+
+  it('ADHD protection has the Sunday planning tasks and the vices reminder', () => {
+    const plan = PLANS.find((p) => p.id === 'adhd-protection')!
+    const tasks = enablePlan(plan, [], today)
+    const sunday = tasks.filter((t) => t.repeat.kind === 'weekly' && t.repeat.days.join() === '0')
+    expect(sunday.map((t) => t.title)).toEqual(['Time block the week', 'Weekly review', 'Check bills and finances', 'Meal prep'])
+    const vices = tasks.find((t) => t.title === 'ADHD Vices')!
+    expect(vices.repeat.kind).toBe('daily')
+    expect(vices.notes).toBe('No alcohol, no sugar, no scrolling, no dopamine')
+    expect(tasks).toHaveLength(12)
+  })
 })
 
 describe('turning a plan on and off', () => {

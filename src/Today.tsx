@@ -32,6 +32,20 @@ type Props = {
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
 const CHECK_CLASS: Record<State, string> = { [-1]: 'sx', 0: 's0', 0.5: 's1', 1: 's2' }
 
+// Up arrow; the down button rotates it
+const ARROW = (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <path
+      d="M12 19V5M5 12l7-7 7 7"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="3"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+)
+
 function dayLabel(date: string, today: string) {
   if (date === today) return 'Today'
   if (date === addDays(today, -1)) return 'Yesterday'
@@ -91,6 +105,8 @@ export function Today({
   function save(task: Task) {
     const exists = tasks.some((t) => t.id === task.id)
     saveTasks(exists ? tasks.map((t) => (t.id === task.id ? task : t)) : [...tasks, task])
+    // New tasks go to the top of their list
+    if (!exists) saveOrder([task.id, ...order])
     setEditing(undefined)
   }
 
@@ -123,10 +139,10 @@ export function Today({
     return (
       <span class="move">
         <button aria-label={`Move ${label} up`} disabled={first} onClick={() => move(-1)}>
-          ▲
+          {ARROW}
         </button>
-        <button aria-label={`Move ${label} down`} disabled={last} onClick={() => move(1)}>
-          ▼
+        <button aria-label={`Move ${label} down`} class="down" disabled={last} onClick={() => move(1)}>
+          {ARROW}
         </button>
       </span>
     )
