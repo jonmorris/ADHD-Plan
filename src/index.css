@@ -285,19 +285,20 @@ button.link {
 }
 
 .move button {
-  width: 3.25rem;
-  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-  border-width: 2px;
-  border-color: var(--accent);
   color: var(--accent);
-  background: var(--bg);
+}
+
+.move button.down svg {
+  transform: rotate(180deg);
 }
 
 .move button:disabled {
-  border-color: var(--border);
   color: var(--muted);
 }
 

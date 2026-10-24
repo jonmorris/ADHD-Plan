@@ -49,6 +49,36 @@ export const PLANS: Plan[] = [
 - [ ] Meditate — Daily
 - [ ] No phone — Daily`,
   },
+  {
+    id: 'adhd-protection',
+    title: 'ADHD protection',
+    summary: 'Guard rails for focus and energy: Sunday planning, daily habits that protect sleep and attention, and a reminder of the vices to avoid.',
+    tips: [],
+    body: `- [ ] Time block the week — Weekly on Sun
+- [ ] Weekly review — Weekly on Sun
+    Notes: clear inboxes, check the calendar, carry over loose ends
+- [ ] Check bills and finances — Weekly on Sun
+- [ ] Meal prep — Weekly on Sun
+- [ ] ADHD Vices — Daily
+    Notes: No alcohol, no sugar, no scrolling, no dopamine
+- [ ] Plan tomorrow's top 3 — Daily
+- [ ] Brain dump — Daily
+- [ ] Daylight within an hour of waking — Daily
+- [ ] Screens off an hour before bed — Daily
+- [ ] Protein with breakfast — Daily
+- [ ] Drink water — Daily
+- [ ] Reset the launch pad — Daily
+    Notes: keys, wallet, bag and tomorrow's things by the door`,
+  },
+  {
+    id: 'lifting',
+    title: 'Lifting',
+    summary: 'Three lifting sessions a week: lift A on Monday, lift B on Wednesday, lift C on Friday.',
+    tips: [],
+    body: `- [ ] Lift A — Weekly on Mon
+- [ ] Lift B — Weekly on Wed
+- [ ] Lift C — Weekly on Fri`,
+  },
 ]
 
 export function isPlanOn(planId: string, tasks: Task[]): boolean {
