@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks'
 import { Analytics } from './Analytics'
+import { useBack } from './back'
 import { toDateKey } from './dates'
 import type { Page } from './notes'
 import { Playbook } from './Playbook'
@@ -12,6 +13,8 @@ const TABS = { today: 'Today', playbook: 'Playbook', analytics: 'Analytics' }
 
 export function App() {
   const [tab, setTab] = useState<keyof typeof TABS>('today')
+  // Back from another tab returns to Today
+  useBack(tab !== 'today', () => setTab('today'))
   const [tasks, saveTasks] = usePersisted<Task[]>('tasks', [])
   const [log, saveLog] = usePersisted<Log>('log', {})
   const [pages, savePages] = usePersisted<Page[]>('pages', [])
