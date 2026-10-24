@@ -8,7 +8,7 @@ const UNITS = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }
 
 type Props = {
   task: Task
-  groups: string[]
+  groups?: string[] // no Group field without these (plan items take their plan's group)
   isNew: boolean
   onSave: (task: Task) => void
   onRemove: () => void
@@ -43,7 +43,7 @@ export function TaskForm({ task, groups, isNew, onSave, onRemove, onClose }: Pro
       repeat,
       end: kind !== 'none' && end ? end : undefined,
       allowHalf: allowHalf || undefined,
-      group: group === NEW_GROUP ? newGroup.trim() : group,
+      ...(groups && { group: group === NEW_GROUP ? newGroup.trim() : group }),
     })
   }
 
@@ -125,16 +125,18 @@ export function TaskForm({ task, groups, isNew, onSave, onRemove, onClose }: Pro
           </label>
         )}
 
-        <label class="field">
-          Group
-          <select value={group} onChange={(e) => setGroup(e.currentTarget.value)}>
-            <option value="">No group</option>
-            {groups.map((g) => (
-              <option value={g}>{g}</option>
-            ))}
-            <option value={NEW_GROUP}>New group…</option>
-          </select>
-        </label>
+        {groups && (
+          <label class="field">
+            Group
+            <select value={group} onChange={(e) => setGroup(e.currentTarget.value)}>
+              <option value="">No group</option>
+              {groups.map((g) => (
+                <option value={g}>{g}</option>
+              ))}
+              <option value={NEW_GROUP}>New group…</option>
+            </select>
+          </label>
+        )}
 
         {group === NEW_GROUP && (
           <label class="field">

@@ -266,7 +266,8 @@ button.link {
   transform: rotate(45deg);
 }
 
-.tasks .title:disabled {
+.tasks .title:disabled,
+.plan-item:disabled {
   opacity: 1;
   cursor: default;
 }
@@ -576,7 +577,7 @@ button.link {
   line-height: 1.5;
 }
 
-/* Built-in plans */
+/* Plans */
 
 .plans {
   list-style: none;
@@ -624,6 +625,45 @@ button.link {
   padding: 0.75rem;
   border-radius: 0.5rem;
   background: var(--surface);
+}
+
+.plan-tasks-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plan-items {
+  list-style: none;
+  padding: 0;
+}
+
+.plan-items li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.plan-item {
+  flex: 1;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 0.6rem 0;
+  color: inherit;
+}
+
+.plan-item span {
+  display: block;
+}
+
+.plan-item .detail {
+  font-size: 0.85rem;
+  color: var(--muted);
+  white-space: pre-line;
+  margin-top: 0.2rem;
 }
 
 .source {

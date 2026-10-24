@@ -1,7 +1,11 @@
-// Built-in routines that can be switched on (adding their tasks) and off (removing them).
-// Task lines use the same format as Playbook pages (see bulk.ts).
-import { parseTaskLines, planBulkAdd } from './bulk'
+// Plans: routines that can be switched on (adding their tasks) and off (removing them).
+// The built-in ones below are copied into the user's saved plans the first time the app runs,
+// after which they can be edited like any plan. Their task lines use the Playbook page format (see bulk.ts).
+import { parseTaskLines } from './bulk'
 import type { Task } from './tasks'
+
+// A plan item is the task it adds, minus what the plan decides (plan, source, group).
+export type PlanItem = Pick<Task, 'id' | 'title' | 'start' | 'repeat' | 'end' | 'notes' | 'allowHalf'>
 
 export type Plan = {
   id: string
@@ -9,10 +13,12 @@ export type Plan = {
   summary: string
   tips: string[]
   source?: { label: string; url: string }
-  body: string
+  items: PlanItem[]
 }
 
-export const PLANS: Plan[] = [
+type BuiltInPlan = Omit<Plan, 'items'> & { body: string }
+
+export const PLANS: BuiltInPlan[] = [
   {
     id: 'clean-mama',
     title: 'Clean Mama',
@@ -82,23 +88,83 @@ export const PLANS: Plan[] = [
   },
 ]
 
+// The built-in plans as saved plans, for a first run.
+export function seedPlans(today: string): Plan[] {
+  return PLANS.map(({ body, ...plan }) => ({
+    ...plan,
+    items: parseTaskLines(body, today).flatMap((line, i) => ('task' in line ? [{ id: `${plan.id}-${i}`, ...line.task }] : [])),
+  }))
+}
+
 export function isPlanOn(planId: string, tasks: Task[]): boolean {
   return tasks.some((t) => t.plan === planId && !t.removedOn)
+}
+
+// Tasks added before items had ids are matched by title.
+function isFrom(task: Task, planId: string, item: PlanItem): boolean {
+  return task.plan === planId && (task.planItem ? task.planItem === item.id : task.title === item.title)
 }
 
 // Adds the plan's tasks in a group named after it, skipping names already on the list
 // and tasks from this plan the user removed.
 export function enablePlan(plan: Plan, tasks: Task[], today: string): Task[] {
-  const dismissed = new Set(tasks.filter((t) => t.plan === plan.id && t.dismissed).map((t) => t.title))
-  const added = planBulkAdd(parseTaskLines(plan.body, today), tasks).flatMap((p) =>
-    p.status === 'add' && !dismissed.has(p.task.title)
-      ? [{ id: crypto.randomUUID(), ...p.task, plan: plan.id, source: plan.title, group: plan.title }]
-      : [],
-  )
+  const active = tasks.filter((t) => !t.removedOn)
+  const names = new Set(active.map((t) => t.title.trim().toLowerCase()))
+  const added: Task[] = []
+  for (const item of plan.items) {
+    const key = item.title.trim().toLowerCase()
+    const skip = names.has(key) || tasks.some((t) => (t.dismissed || !t.removedOn) && isFrom(t, plan.id, item))
+    if (skip) continue
+    names.add(key)
+    const { id, start, ...rest } = item
+    added.push({
+      ...rest,
+      id: crypto.randomUUID(),
+      start: start > today ? start : today,
+      plan: plan.id,
+      planItem: id,
+      source: plan.title,
+      group: plan.title,
+    })
+  }
   return [...tasks, ...added]
 }
 
 // Removes the plan's tasks from today on. Their history stays in Analytics.
 export function disablePlan(planId: string, tasks: Task[], today: string): Task[] {
   return tasks.map((t) => (t.plan === planId && !t.removedOn ? { ...t, removedOn: today } : t))
+}
+
+// Brings the tasks on the list from this item in line with its edit. History is kept.
+export function updateItem(planId: string, before: PlanItem, after: PlanItem, tasks: Task[]): Task[] {
+  return tasks.map((t) => {
+    if (t.removedOn || !isFrom(t, planId, before)) return t
+    const { id, start, ...rest } = after
+    // Only a changed start date moves the task's start, and never back before it was added
+    const moved = start !== before.start && start > t.start
+    return { ...t, ...rest, planItem: id, start: moved ? start : t.start }
+  })
+}
+
+// Removes the tasks on the list from this item, from today on.
+export function removeItem(planId: string, item: PlanItem, tasks: Task[], today: string): Task[] {
+  return tasks.map((t) => (!t.removedOn && isFrom(t, planId, item) ? { ...t, removedOn: today } : t))
+}
+
+// Keeps the group and tag of the plan's tasks on the list in step with a renamed plan.
+export function renamePlan(plan: Plan, title: string, tasks: Task[]): Task[] {
+  return tasks.map((t) =>
+    t.plan === plan.id && !t.removedOn
+      ? { ...t, source: title, group: t.group === plan.title ? title : t.group }
+      : t,
+  )
+}
+
+// Position of a task's item in its plan, for ordering plan tasks the way the plan lists them.
+export function itemIndex(plans: Plan[]): (task: Task) => number | undefined {
+  return (task) => {
+    const plan = plans.find((p) => p.id === task.plan)
+    const i = plan ? plan.items.findIndex((item) => isFrom(task, plan.id, item)) : -1
+    return i === -1 ? undefined : i
+  }
 }

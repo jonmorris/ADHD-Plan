@@ -15,7 +15,8 @@ export type Task = {
   end?: string // last day a repeating task can occur
   notes?: string
   allowHalf?: boolean // tap once for half done, twice for done
-  plan?: string // id of the built-in plan that added it
+  plan?: string // id of the plan that added it
+  planItem?: string // id of the plan item it came from
   source?: string // name of the plan or Playbook page it came from
   group?: string // '' = no group (see groups.ts)
   dismissed?: boolean // removed by the user, so turning its plan back on won't re-add it
@@ -80,13 +81,19 @@ export function byCadence(a: Task, b: Task): number {
   return cadenceDays(a.repeat) - cadenceDays(b.repeat)
 }
 
-// Tasks in the user's saved order. Tasks not in it yet (e.g. newly added) go after, by cadence.
-export function sortTasks(tasks: Task[], order: string[]): Task[] {
+// Tasks in the user's saved order. Tasks not in it yet (e.g. newly added) go after, by cadence,
+// except tasks from the same plan, which keep the plan's order (`planIndex`).
+export function sortTasks(tasks: Task[], order: string[], planIndex?: (t: Task) => number | undefined): Task[] {
   const pos = (t: Task) => {
     const i = order.indexOf(t.id)
     return i === -1 ? Infinity : i
   }
-  return [...tasks].sort((a, b) => pos(a) - pos(b) || byCadence(a, b))
+  const byPlan = (a: Task, b: Task) => {
+    const i = a.plan && a.plan === b.plan ? planIndex?.(a) : undefined
+    const j = i === undefined ? undefined : planIndex?.(b)
+    return i === undefined || j === undefined ? byCadence(a, b) : i - j
+  }
+  return [...tasks].sort((a, b) => pos(a) - pos(b) || byPlan(a, b))
 }
 
 function daysInMonth(d: Date): number {
