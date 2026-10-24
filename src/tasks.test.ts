@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byCadence, dayStats, describeRepeat, isDueOn, nextState, occursOn, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
+import { byCadence, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -112,6 +112,35 @@ describe('nextState', () => {
     expect(nextState(0, false)).toBe(1)
     expect(nextState(1, false)).toBe(0)
     expect(nextState(0.5, false)).toBe(1)
+  })
+})
+
+describe('not done (✗)', () => {
+  const daily = task({ kind: 'daily', every: 1 })
+
+  it('counts the same as an empty box', () => {
+    const log: Log = { '2026-10-05': { t: -1 } }
+    expect(credit(-1)).toBe(0)
+    expect(dayStats([daily], log, '2026-10-05', '2026-10-05')).toEqual({ due: 1, done: 0 })
+    expect(summarize([daily], log, '2026-10-05', 1).perDay[0].done).toBe(0)
+  })
+
+  it('breaks a streak like a missed day', () => {
+    const log: Log = { '2026-10-03': { t: 1 }, '2026-10-04': { t: -1 } }
+    expect(streak(daily, log, '2026-10-05')).toBe(0)
+  })
+
+  it('on a one-off task only applies to that day, which then carries over empty', () => {
+    const oneOff = task({ kind: 'none' }, '2026-10-10')
+    const log: Log = { '2026-10-10': { t: -1 } }
+    expect(stateOn(oneOff, '2026-10-10', log)).toBe(-1)
+    expect(stateOn(oneOff, '2026-10-11', log)).toBe(0)
+    expect(isDueOn(oneOff, '2026-10-11', log, '2026-10-20')).toBe(true)
+  })
+
+  it('a tap on ✗ starts again from empty', () => {
+    expect(nextState(-1, false)).toBe(1)
+    expect(nextState(-1, true)).toBe(0.5)
   })
 })
 

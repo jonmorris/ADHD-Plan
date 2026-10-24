@@ -11,6 +11,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
+        // A fresh id makes Chrome treat this as a new app, so phones holding a stale install can install again
+        id: 'adhd-plan',
         name: 'ADHD Plan',
         short_name: 'ADHD Plan',
         start_url: '.',

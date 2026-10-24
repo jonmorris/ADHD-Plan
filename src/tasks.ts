@@ -19,15 +19,20 @@ export type Task = {
   removedOn?: string
 }
 
-// 0 = not done, 0.5 = half done, 1 = done
-export type State = 0 | 0.5 | 1
+// 0 = not done, 0.5 = half done, 1 = done, -1 = marked as not done (✗)
+export type State = -1 | 0 | 0.5 | 1
 
 // log[date][taskId] = state that day. Nothing is ever deleted from it.
 export type Log = Record<string, Record<string, State>>
 
 export function nextState(s: State, allowHalf: boolean): State {
   if (!allowHalf) return s === 1 ? 0 : 1
-  return s === 0 ? 0.5 : s === 0.5 ? 1 : 0
+  return s === 0 || s === -1 ? 0.5 : s === 0.5 ? 1 : 0
+}
+
+// How much a state counts towards totals: ✗ counts the same as not done.
+export function credit(s: State): number {
+  return Math.max(s, 0)
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -132,12 +137,15 @@ export function stateOn(task: Task, key: string, log: Log): State {
     .filter((d) => d <= key && log[d][task.id] !== undefined)
     .sort()
     .pop()
-  return latest ? log[latest][task.id] : 0
+  if (!latest) return 0
+  // ✗ only applies to the day it was given
+  const state = log[latest][task.id]
+  return state === -1 && latest !== key ? 0 : state
 }
 
 export function dayStats(tasks: Task[], log: Log, key: string, today: string) {
   const due = tasks.filter((t) => isDueOn(t, key, log, today))
-  return { due: due.length, done: due.reduce((sum, t) => sum + stateOn(t, key, log), 0) }
+  return { due: due.length, done: due.reduce((sum, t) => sum + credit(stateOn(t, key, log)), 0) }
 }
 
 // Consecutive scheduled days fully done, ending today (or yesterday if today isn't done yet).
@@ -159,7 +167,7 @@ export function summarize(tasks: Task[], log: Log, today: string, days: number) 
     .filter((t) => t.repeat.kind !== 'none')
     .map((task) => {
       const due = dates.filter((d) => isDueOn(task, d, log, today))
-      const done = due.reduce((sum, d) => sum + stateOn(task, d, log), 0)
+      const done = due.reduce((sum, d) => sum + credit(stateOn(task, d, log)), 0)
       return { task, due: due.length, done, streak: streak(task, log, today) }
     })
     .filter((r) => r.due > 0)

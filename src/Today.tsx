@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks'
+import { useRef, useState } from 'preact/hooks'
 import { addDays, fromDateKey, weekNumber } from './dates'
 import {
   dayStats,
@@ -23,7 +23,8 @@ type Props = {
   saveOrder: (order: string[]) => void
 }
 
-const LABELS: Record<State, string> = { 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
+const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
+const CHECK_CLASS: Record<State, string> = { [-1]: 'sx', 0: 's0', 0.5: 's1', 1: 's2' }
 
 function dayLabel(date: string, today: string) {
   if (date === today) return 'Today'
@@ -42,8 +43,25 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
   const { done } = dayStats(tasks, log, date, today)
   const future = date > today
 
+  function setState(task: Task, state: State) {
+    saveLog({ ...log, [date]: { ...log[date], [task.id]: state } })
+  }
+
+  // Press and hold a checkbox to mark it ✗ (not done); hold again to clear it.
+  const holdTimer = useRef<number>()
+  const held = useRef(false)
+
+  function startHold(task: Task) {
+    held.current = false
+    holdTimer.current = window.setTimeout(() => {
+      held.current = true
+      setState(task, stateOn(task, date, log) === -1 ? 0 : -1)
+    }, 500)
+  }
+
   function tap(task: Task) {
-    saveLog({ ...log, [date]: { ...log[date], [task.id]: nextState(stateOn(task, date, log), !!task.allowHalf) } })
+    if (held.current) return void (held.current = false)
+    setState(task, nextState(stateOn(task, date, log), !!task.allowHalf))
   }
 
   function save(task: Task) {
@@ -134,14 +152,22 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
         {due.map((t, i) => {
           const state = stateOn(t, date, log)
           return (
-            <li key={t.id} class={`c-${t.repeat.kind}${state === 1 ? ' done' : ''}`}>
+            <li
+              key={t.id}
+              class={`c-${t.repeat.kind}${state === 1 ? ' done' : state === -1 ? ' not-done' : ''}`}
+            >
               <button
                 role="checkbox"
-                class={`check s${state * 2}`}
+                class={`check ${CHECK_CLASS[state]}`}
                 aria-checked={state === 1 ? 'true' : state === 0.5 ? 'mixed' : 'false'}
                 aria-label={`${t.title}: ${LABELS[state]}`}
                 disabled={reordering || future}
                 onClick={() => tap(t)}
+                onPointerDown={() => startHold(t)}
+                onPointerUp={() => clearTimeout(holdTimer.current)}
+                onPointerLeave={() => clearTimeout(holdTimer.current)}
+                onPointerCancel={() => clearTimeout(holdTimer.current)}
+                onContextMenu={(e) => e.preventDefault()}
               />
               <button class="title" disabled={reordering} onClick={() => setEditing(t)}>
                 <span class="name">{t.title}</span>
@@ -166,6 +192,8 @@ export function Today({ tasks, log, order, today, saveTasks, saveLog, saveOrder 
           )
         })}
       </ul>
+
+      {due.length > 0 && !future && <p class="hint">Press and hold a box to mark it ✕ (didn't do it).</p>}
 
       {editing && (
         <TaskForm
