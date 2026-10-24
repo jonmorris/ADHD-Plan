@@ -2,6 +2,7 @@ import { useRef, useState } from 'preact/hooks'
 import { addDays, fromDateKey, weekNumber } from './dates'
 import { groupOf, sections, sortGroups, sourceOf } from './groups'
 import {
+  credit,
   dayStats,
   describeRepeat,
   isDueOn,
@@ -19,11 +20,13 @@ type Props = {
   log: Log
   order: string[]
   groupOrder: string[]
+  collapsed: string[]
   today: string
   saveTasks: (tasks: Task[]) => void
   saveLog: (log: Log) => void
   saveOrder: (order: string[]) => void
   saveGroupOrder: (order: string[]) => void
+  saveCollapsed: (groups: string[]) => void
 }
 
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
@@ -41,11 +44,13 @@ export function Today({
   log,
   order,
   groupOrder,
+  collapsed,
   today,
   saveTasks,
   saveLog,
   saveOrder,
   saveGroupOrder,
+  saveCollapsed,
 }: Props) {
   const [date, setDate] = useState(today)
   const [editing, setEditing] = useState<Task>()
@@ -127,6 +132,10 @@ export function Today({
     )
   }
 
+  function toggleCollapsed(group: string) {
+    saveCollapsed(collapsed.includes(group) ? collapsed.filter((g) => g !== group) : [...collapsed, group])
+  }
+
   function addTask() {
     setEditing({ id: crypto.randomUUID(), title: '', start: date, repeat: { kind: 'none' } })
   }
@@ -198,18 +207,34 @@ export function Today({
 
       {daySections.map((section) => {
         const g = namedSections.indexOf(section)
+        const isCollapsed = collapsed.includes(section.group)
+        const groupDone = section.tasks.reduce((sum, t) => sum + credit(stateOn(t, date, log)), 0)
         return (
           <section key={section.group || '(none)'}>
             {section.group && (
               <div class="group-head">
-                <h2>{section.group}</h2>
+                <h2>
+                  <button
+                    class="group-toggle"
+                    aria-expanded={!isCollapsed}
+                    onClick={() => toggleCollapsed(section.group)}
+                  >
+                    <span class="chevron" aria-hidden="true">
+                      {isCollapsed ? '▸' : '▾'}
+                    </span>
+                    {section.group}
+                    <span class="group-count">
+                      {groupDone}/{section.tasks.length}
+                    </span>
+                  </button>
+                </h2>
                 {reordering &&
                   moveButtons(`group ${section.group}`, g === 0, g === namedSections.length - 1, (step) =>
                     moveGroup(g, step),
                   )}
               </div>
             )}
-            <ul class="tasks">
+            <ul class="tasks" hidden={isCollapsed}>
               {section.tasks.map((t, i) => {
                 const state = stateOn(t, date, log)
                 const source = sourceOf(t)
