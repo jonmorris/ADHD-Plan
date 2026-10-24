@@ -35,7 +35,8 @@ describe('built-in plans', () => {
     const vices = tasks.find((t) => t.title === 'ADHD Vices')!
     expect(vices.repeat.kind).toBe('daily')
     expect(vices.notes).toBe('No alcohol, no sugar, no scrolling, no dopamine')
-    expect(tasks).toHaveLength(12)
+    expect(tasks.find((t) => t.title === "Close loops, don't open new loops")?.repeat.kind).toBe('daily')
+    expect(tasks).toHaveLength(13)
   })
 
   it('Lifting has lift A on Monday, B on Wednesday and C on Friday', () => {
@@ -73,6 +74,15 @@ describe('turning a plan on and off', () => {
     const off = disablePlan('clean-mama', enablePlan(cleanMama, [], today), today)
     const on = enablePlan(cleanMama, off, '2026-10-24')
     expect(on.filter((t) => t.plan === 'clean-mama' && !t.removedOn)).toHaveLength(11)
+  })
+
+  it('can add tasks added to a plan since it was turned on, without duplicating the rest', () => {
+    const older = { ...cleanMama, body: cleanMama.body.split('\n').slice(0, 2).join('\n') }
+    const on = enablePlan(older, [], today)
+    expect(on).toHaveLength(2)
+    const updated = enablePlan(cleanMama, on, today)
+    expect(updated).toHaveLength(11)
+    expect(updated.slice(0, 2)).toEqual(on)
   })
 
   it('does not bring back a task the user removed when the plan is turned off and on', () => {

@@ -616,6 +616,16 @@ button.link {
   gap: 1rem;
 }
 
+.plan-update {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
 .source {
   font-size: 0.85rem;
   color: var(--muted);
