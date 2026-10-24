@@ -61,6 +61,7 @@ export const PLANS: Plan[] = [
 - [ ] Meal prep — Weekly on Sun
 - [ ] ADHD Vices — Daily
     Notes: No alcohol, no sugar, no scrolling, no dopamine
+- [ ] Close loops, don't open new loops — Daily
 - [ ] Plan tomorrow's top 3 — Daily
 - [ ] Brain dump — Daily
 - [ ] Daylight within an hour of waking — Daily

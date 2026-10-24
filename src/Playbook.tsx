@@ -20,6 +20,9 @@ export function Playbook({ pages, savePages, tasks, saveTasks, today }: Props) {
 
   const open = pages.find((p) => p.id === openId)
   const openPlan = PLANS.find((p) => p.id === openPlanId)
+  // Tasks added to a plan since it was switched on (enablePlan skips ones already there or removed)
+  const newTasks =
+    openPlan && isPlanOn(openPlan.id, tasks) ? enablePlan(openPlan, tasks, today).length - tasks.length : 0
 
   function togglePlan(plan: Plan) {
     if (!isPlanOn(plan.id, tasks)) return saveTasks(enablePlan(plan, tasks, today))
@@ -96,6 +99,14 @@ export function Playbook({ pages, savePages, tasks, saveTasks, today }: Props) {
           {planSwitch(openPlan)}
         </div>
         <p>{openPlan.summary}</p>
+        {newTasks > 0 && (
+          <p class="plan-update">
+            This plan has {newTasks} task{newTasks === 1 ? '' : 's'} you don't have yet.{' '}
+            <button class="primary" onClick={() => saveTasks(enablePlan(openPlan, tasks, today))}>
+              Add {newTasks} new task{newTasks === 1 ? '' : 's'}
+            </button>
+          </p>
+        )}
         <ul>
           {openPlan.tips.map((tip) => (
             <li>{tip}</li>
