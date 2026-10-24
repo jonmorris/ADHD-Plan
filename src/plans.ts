@@ -70,6 +70,15 @@ export const PLANS: Plan[] = [
 - [ ] Reset the launch pad — Daily
     Notes: keys, wallet, bag and tomorrow's things by the door`,
   },
+  {
+    id: 'lifting',
+    title: 'Lifting',
+    summary: 'Three lifting sessions a week: lift A on Monday, lift B on Wednesday, lift C on Friday.',
+    tips: [],
+    body: `- [ ] Lift A — Weekly on Mon
+- [ ] Lift B — Weekly on Wed
+- [ ] Lift C — Weekly on Fri`,
+  },
 ]
 
 export function isPlanOn(planId: string, tasks: Task[]): boolean {

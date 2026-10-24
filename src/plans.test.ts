@@ -37,6 +37,16 @@ describe('built-in plans', () => {
     expect(vices.notes).toBe('No alcohol, no sugar, no scrolling, no dopamine')
     expect(tasks).toHaveLength(12)
   })
+
+  it('Lifting has lift A on Monday, B on Wednesday and C on Friday', () => {
+    const plan = PLANS.find((p) => p.id === 'lifting')!
+    const tasks = enablePlan(plan, [], today)
+    expect(tasks.map((t) => [t.title, t.repeat.kind === 'weekly' && t.repeat.days])).toEqual([
+      ['Lift A', [1]],
+      ['Lift B', [3]],
+      ['Lift C', [5]],
+    ])
+  })
 })
 
 describe('turning a plan on and off', () => {
