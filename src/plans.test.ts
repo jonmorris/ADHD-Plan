@@ -19,6 +19,13 @@ describe('built-in plans', () => {
     const weekly = tasks.flatMap((t) => (t.repeat.kind === 'weekly' ? t.repeat.days : []))
     expect(weekly.sort()).toEqual([1, 2, 3, 4, 5, 6])
   })
+
+  it('Morning routine adds six daily tasks in its own group', () => {
+    const plan = PLANS.find((p) => p.id === 'morning-routine')!
+    const tasks = enablePlan(plan, [], today)
+    expect(tasks.map((t) => t.title)).toEqual(['Wake up at 5', 'Physical activity', 'Read', 'Journal', 'Meditate', 'No phone'])
+    expect(tasks.every((t) => t.repeat.kind === 'daily' && t.group === 'Morning routine')).toBe(true)
+  })
 })
 
 describe('turning a plan on and off', () => {

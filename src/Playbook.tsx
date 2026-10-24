@@ -115,12 +115,14 @@ export function Playbook({ pages, savePages, tasks, saveTasks, today }: Props) {
               : [],
           )}
         </ul>
-        <p class="source">
-          Source:{' '}
-          <a href={openPlan.source.url} target="_blank" rel="noopener">
-            {openPlan.source.label}
-          </a>
-        </p>
+        {openPlan.source && (
+          <p class="source">
+            Source:{' '}
+            <a href={openPlan.source.url} target="_blank" rel="noopener">
+              {openPlan.source.label}
+            </a>
+          </p>
+        )}
       </article>
     )
   }

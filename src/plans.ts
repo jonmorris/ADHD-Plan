@@ -8,7 +8,7 @@ export type Plan = {
   title: string
   summary: string
   tips: string[]
-  source: { label: string; url: string }
+  source?: { label: string; url: string }
   body: string
 }
 
@@ -36,6 +36,18 @@ export const PLANS: Plan[] = [
 - [ ] Catch-up — Weekly on Fri
     Notes: anything missed this week
 - [ ] Sheets and towels — Weekly on Sat`,
+  },
+  {
+    id: 'morning-routine',
+    title: 'Morning routine',
+    summary: 'An early start: up at 5, move, read, journal and meditate, with no phone.',
+    tips: [],
+    body: `- [ ] Wake up at 5 — Daily
+- [ ] Physical activity — Daily
+- [ ] Read — Daily
+- [ ] Journal — Daily
+- [ ] Meditate — Daily
+- [ ] No phone — Daily`,
   },
 ]
 
