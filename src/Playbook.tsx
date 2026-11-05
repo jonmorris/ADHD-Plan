@@ -187,6 +187,17 @@ export function Playbook({ pages, savePages, plans, savePlans, tasks, saveTasks,
           aria-label="Summary"
           rows={3}
         />
+        <label class="check-field">
+          <input
+            type="checkbox"
+            checked={!!planDraft.sequential}
+            onChange={(e) => setPlanDraft({ ...planDraft, sequential: e.currentTarget.checked || undefined })}
+          />
+          <span>
+            Sequential
+            <small>Show its tasks on Today one at a time, in order. The next appears once you tick or ✕ the one before.</small>
+          </span>
+        </label>
         <div class="actions">
           {!isNew && (
             <button type="button" class="danger" onClick={() => deletePlan(planDraft)}>
