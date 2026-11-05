@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks'
 import { fromDateKey } from './dates'
-import { dollars } from './money'
+import { dollars, weekProgress } from './money'
 import type { Plan } from './plans'
 import { summarize, type Log, type Task } from './tasks'
 
@@ -23,6 +23,10 @@ export function Analytics({ tasks, plans, log, today }: Props) {
   const readout = perDay.find((d) => d.date === selected) ?? perDay[perDay.length - 1]
   const earnedOn = (date: string) => dollars(tasks, plans, log, date, today).earned
   const totalEarned = perDay.reduce((sum, d) => sum + earnedOn(d.date), 0)
+  const weeklyBonuses = plans.flatMap((plan) => {
+    const week = plan.weeklyBonus ? weekProgress(plan, tasks, log, today, today) : undefined
+    return week ? [{ plan, week }] : []
+  })
 
   return (
     <>
@@ -83,6 +87,32 @@ export function Analytics({ tasks, plans, log, today }: Props) {
           <span>Today</span>
         </div>
       </section>
+
+      {weeklyBonuses.length > 0 && (
+        <section>
+          <h2>Weekly bonuses this week</h2>
+          <table class="task-table">
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>Bonus</th>
+                <th>Done</th>
+              </tr>
+            </thead>
+            <tbody>
+              {weeklyBonuses.map(({ plan, week }) => (
+                <tr key={plan.id}>
+                  <td>{plan.title}</td>
+                  <td>${plan.weeklyBonus}</td>
+                  <td>
+                    {week.done} of {week.due}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       <section>
         <h2>Repeating tasks</h2>
