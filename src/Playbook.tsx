@@ -204,17 +204,32 @@ export function Playbook({ pages, savePages, plans, savePlans, tracking, saveTra
           </span>
         </label>
         {showDollars && (
-          <label class="field">
-            Bonus when all its tasks for the day are done
-            <select
-              value={planDraft.bonus ?? 0}
-              onChange={(e) => setPlanDraft({ ...planDraft, bonus: Number(e.currentTarget.value) || undefined })}
-            >
-              {BONUSES.map((v) => (
-                <option value={v}>${v}</option>
-              ))}
-            </select>
-          </label>
+          <>
+            <label class="field">
+              Daily bonus: all its daily tasks done that day
+              <select
+                value={planDraft.bonus ?? 0}
+                onChange={(e) => setPlanDraft({ ...planDraft, bonus: Number(e.currentTarget.value) || undefined })}
+              >
+                {BONUSES.map((v) => (
+                  <option value={v}>${v}</option>
+                ))}
+              </select>
+            </label>
+            <label class="field">
+              Weekly bonus: all its weekly tasks done that week
+              <select
+                value={planDraft.weeklyBonus ?? 0}
+                onChange={(e) =>
+                  setPlanDraft({ ...planDraft, weeklyBonus: Number(e.currentTarget.value) || undefined })
+                }
+              >
+                {BONUSES.map((v) => (
+                  <option value={v}>${v}</option>
+                ))}
+              </select>
+            </label>
+          </>
         )}
         <div class="actions">
           {!isNew && (

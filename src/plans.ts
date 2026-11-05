@@ -15,7 +15,8 @@ export type Plan = {
   source?: { label: string; url: string }
   items: PlanItem[]
   sequential?: boolean // its tasks show one at a time on Today
-  bonus?: number // dollars earned on a day when all its tasks are done
+  bonus?: number // dollars earned on a day when all its daily tasks are done
+  weeklyBonus?: number // dollars earned when all its weekly tasks in a week are done
 }
 
 type BuiltInPlan = Omit<Plan, 'items'> & { body: string }
