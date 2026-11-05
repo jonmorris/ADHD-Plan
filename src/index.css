@@ -175,6 +175,17 @@ button.link {
   white-space: pre-line;
 }
 
+.defer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--accent);
+}
+
 .tasks li.done .name {
   color: var(--muted);
   text-decoration: line-through;
