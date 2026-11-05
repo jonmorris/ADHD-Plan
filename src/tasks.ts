@@ -15,6 +15,7 @@ export type Task = {
   end?: string // last day a repeating task can occur
   notes?: string
   allowHalf?: boolean // tap once for half done, twice for done
+  value?: number // dollars earned when done (default 1, see money.ts)
   plan?: string // id of the plan that added it
   planItem?: string // id of the plan item it came from
   source?: string // name of the plan or Playbook page it came from

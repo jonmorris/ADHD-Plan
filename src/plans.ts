@@ -5,7 +5,7 @@ import { parseTaskLines } from './bulk'
 import type { Task } from './tasks'
 
 // A plan item is the task it adds, minus what the plan decides (plan, source, group).
-export type PlanItem = Pick<Task, 'id' | 'title' | 'start' | 'repeat' | 'end' | 'notes' | 'allowHalf'>
+export type PlanItem = Pick<Task, 'id' | 'title' | 'start' | 'repeat' | 'end' | 'notes' | 'allowHalf' | 'value'>
 
 export type Plan = {
   id: string
@@ -15,6 +15,7 @@ export type Plan = {
   source?: { label: string; url: string }
   items: PlanItem[]
   sequential?: boolean // its tasks show one at a time on Today
+  bonus?: number // dollars earned on a day when all its tasks are done
 }
 
 type BuiltInPlan = Omit<Plan, 'items'> & { body: string }

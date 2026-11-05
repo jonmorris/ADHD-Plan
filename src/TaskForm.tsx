@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks'
 import { fromDateKey } from './dates'
 import { groupOf } from './groups'
+import { VALUES } from './money'
 import type { Repeat, Task } from './tasks'
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -9,6 +10,7 @@ const UNITS = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }
 type Props = {
   task: Task
   groups?: string[] // no Group field without these (plan items take their plan's group)
+  showValue?: boolean // dollar value field, for plan items when tracking dollars
   isNew: boolean
   onSave: (task: Task) => void
   onRemove: () => void
@@ -17,12 +19,13 @@ type Props = {
 
 const NEW_GROUP = '\u0000new'
 
-export function TaskForm({ task, groups, isNew, onSave, onRemove, onClose }: Props) {
+export function TaskForm({ task, groups, showValue, isNew, onSave, onRemove, onClose }: Props) {
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
   const [end, setEnd] = useState(task.end ?? '')
   const [allowHalf, setAllowHalf] = useState(!!task.allowHalf)
+  const [value, setValue] = useState(task.value ?? 1)
   const [group, setGroup] = useState(groupOf(task))
   const [newGroup, setNewGroup] = useState('')
   const [kind, setKind] = useState<Repeat['kind']>(task.repeat.kind)
@@ -43,6 +46,7 @@ export function TaskForm({ task, groups, isNew, onSave, onRemove, onClose }: Pro
       repeat,
       end: kind !== 'none' && end ? end : undefined,
       allowHalf: allowHalf || undefined,
+      value: value === 1 ? undefined : value,
       ...(groups && { group: group === NEW_GROUP ? newGroup.trim() : group }),
     })
   }
@@ -142,6 +146,17 @@ export function TaskForm({ task, groups, isNew, onSave, onRemove, onClose }: Pro
           <label class="field">
             New group name
             <input value={newGroup} onInput={(e) => setNewGroup(e.currentTarget.value)} required />
+          </label>
+        )}
+
+        {showValue && (
+          <label class="field">
+            Value when done
+            <select value={value} onChange={(e) => setValue(Number(e.currentTarget.value))}>
+              {VALUES.map((v) => (
+                <option value={v}>${v}</option>
+              ))}
+            </select>
           </label>
         )}
 
