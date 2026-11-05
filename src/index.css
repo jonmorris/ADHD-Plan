@@ -754,6 +754,12 @@ button.link {
   color: var(--danger);
 }
 
+.tracking {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 /* Analytics */
 
 .ranges {
@@ -769,7 +775,7 @@ button.link {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
   margin: 1rem 0;
 }

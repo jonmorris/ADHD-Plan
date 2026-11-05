@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks'
 import { Analytics } from './Analytics'
 import { useBack } from './back'
 import { toDateKey } from './dates'
+import type { Tracking } from './money'
 import type { Page } from './notes'
 import { Playbook } from './Playbook'
 import { seedPlans, type Plan } from './plans'
@@ -24,8 +25,9 @@ export function App() {
   const today = toDateKey(new Date())
   // The built-in plans, until the user's own copies are saved
   const [plans, savePlans] = usePersisted<Plan[]>('plans', seedPlans(today))
+  const [tracking, saveTracking] = usePersisted<Tracking>('tracking', 'count')
 
-  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking) return null
 
   function exportData() {
     const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, order, groupOrder }, null, 2)], { type: 'application/json' })
@@ -43,6 +45,7 @@ export function App() {
           <Today
             tasks={tasks}
             plans={plans}
+            tracking={tracking}
             log={log}
             order={order}
             groupOrder={groupOrder}
@@ -61,9 +64,11 @@ export function App() {
             savePages={savePages}
             plans={plans}
             savePlans={savePlans}
+            tracking={tracking}
+            saveTracking={saveTracking}
             tasks={tasks} saveTasks={saveTasks} today={today} />
         )}
-        {tab === 'analytics' && <Analytics tasks={tasks} log={log} today={today} />}
+        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} />}
         <button class="export" onClick={exportData}>
           Export backup
         </button>

@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks'
 import { useBack } from './back'
 import { BulkAdd } from './BulkAdd'
+import { BONUSES, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { parseNote, type Page } from './notes'
 import {
@@ -21,12 +22,15 @@ type Props = {
   savePages: (pages: Page[]) => void
   plans: Plan[]
   savePlans: (plans: Plan[]) => void
+  tracking: Tracking
+  saveTracking: (tracking: Tracking) => void
   tasks: Task[]
   saveTasks: (tasks: Task[]) => void
   today: string
 }
 
-export function Playbook({ pages, savePages, plans, savePlans, tasks, saveTasks, today }: Props) {
+export function Playbook({ pages, savePages, plans, savePlans, tracking, saveTracking, tasks, saveTasks, today }: Props) {
+  const showDollars = tracking === 'dollars'
   const [openId, setOpenId] = useState<string>()
   const [draft, setDraft] = useState<Page>()
   const [openPlanId, setOpenPlanId] = useState<string>()
@@ -102,6 +106,7 @@ export function Playbook({ pages, savePages, plans, savePlans, tasks, saveTasks,
       end: task.end,
       notes: task.notes,
       allowHalf: task.allowHalf,
+      value: task.value,
     }
     const before = plan.items.find((i) => i.id === item.id)
     const next = { ...plan, items: before ? plan.items.map((i) => (i.id === item.id ? item : i)) : [...plan.items, item] }
@@ -198,6 +203,19 @@ export function Playbook({ pages, savePages, plans, savePlans, tasks, saveTasks,
             <small>Show its tasks on Today one at a time, in order. The next appears once you tick or ✕ the one before.</small>
           </span>
         </label>
+        {showDollars && (
+          <label class="field">
+            Bonus when all its tasks for the day are done
+            <select
+              value={planDraft.bonus ?? 0}
+              onChange={(e) => setPlanDraft({ ...planDraft, bonus: Number(e.currentTarget.value) || undefined })}
+            >
+              {BONUSES.map((v) => (
+                <option value={v}>${v}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <div class="actions">
           {!isNew && (
             <button type="button" class="danger" onClick={() => deletePlan(planDraft)}>
@@ -261,7 +279,10 @@ export function Playbook({ pages, savePages, plans, savePlans, tasks, saveTasks,
             <li key={item.id}>
               <button class="plan-item" disabled={reordering} onClick={() => setEditingItem(item)}>
                 <span class="name">{item.title}</span>
-                <span class="detail">{describeRepeat(item.repeat, item.start, item.end)}</span>
+                <span class="detail">
+                  {describeRepeat(item.repeat, item.start, item.end)}
+                  {showDollars && ` · $${item.value ?? 1}`}
+                </span>
                 {item.notes && <span class="detail">{item.notes}</span>}
               </button>
               {reordering && (
@@ -294,6 +315,7 @@ export function Playbook({ pages, savePages, plans, savePlans, tasks, saveTasks,
         {editingItem && (
           <TaskForm
             task={editingItem}
+            showValue={showDollars}
             isNew={!openPlan.items.some((i) => i.id === editingItem.id)}
             onSave={(task) => saveItem(openPlan, task)}
             onRemove={() => deleteItem(openPlan, editingItem)}
@@ -336,6 +358,17 @@ export function Playbook({ pages, savePages, plans, savePlans, tasks, saveTasks,
   return (
     <>
       <h1>Playbook</h1>
+
+      <div class="tracking">
+        <span id="tracking-label">Track</span>
+        <div class="ranges" role="group" aria-labelledby="tracking-label">
+          {(['count', 'dollars'] as const).map((t) => (
+            <button class={tracking === t ? 'on' : ''} aria-pressed={tracking === t} onClick={() => saveTracking(t)}>
+              {t === 'count' ? 'Count' : 'Dollars'}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <h2>Plans</h2>
       <ul class="plans">

@@ -1,16 +1,18 @@
 import { useState } from 'preact/hooks'
 import { fromDateKey } from './dates'
+import { dollars } from './money'
+import type { Plan } from './plans'
 import { summarize, type Log, type Task } from './tasks'
 
 const RANGES = [7, 30, 90]
 
-type Props = { tasks: Task[]; log: Log; today: string }
+type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string }
 
 function formatDay(key: string) {
   return fromDateKey(key).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-export function Analytics({ tasks, log, today }: Props) {
+export function Analytics({ tasks, plans, log, today }: Props) {
   const [days, setDays] = useState(7)
   const [selected, setSelected] = useState(today)
 
@@ -19,6 +21,8 @@ export function Analytics({ tasks, log, today }: Props) {
   const totalDue = perDay.reduce((sum, d) => sum + d.due, 0)
   const maxDue = Math.max(1, ...perDay.map((d) => d.due))
   const readout = perDay.find((d) => d.date === selected) ?? perDay[perDay.length - 1]
+  const earnedOn = (date: string) => dollars(tasks, plans, log, date, today).earned
+  const totalEarned = perDay.reduce((sum, d) => sum + earnedOn(d.date), 0)
 
   return (
     <>
@@ -45,6 +49,10 @@ export function Analytics({ tasks, log, today }: Props) {
           <span class="label">One-offs finished</span>
           <span class="value">{oneOffsDone}</span>
         </div>
+        <div class="stat">
+          <span class="label">Dollars earned</span>
+          <span class="value">${totalEarned}</span>
+        </div>
       </div>
 
       <section>
@@ -53,7 +61,7 @@ export function Analytics({ tasks, log, today }: Props) {
           <strong>
             {readout.done} of {readout.due} done
           </strong>{' '}
-          · {formatDay(readout.date)}
+          · ${earnedOn(readout.date)} earned · {formatDay(readout.date)}
         </p>
         <div class="chart">
           {perDay.map((d) => (

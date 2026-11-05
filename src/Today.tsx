@@ -15,6 +15,7 @@ import {
   type State,
   type Task,
 } from './tasks'
+import { dollars, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, type Plan } from './plans'
 import { TaskForm } from './TaskForm'
@@ -22,6 +23,7 @@ import { TaskForm } from './TaskForm'
 type Props = {
   tasks: Task[]
   plans: Plan[]
+  tracking: Tracking
   log: Log
   order: string[]
   groupOrder: string[]
@@ -47,6 +49,7 @@ function dayLabel(date: string, today: string) {
 export function Today({
   tasks,
   plans,
+  tracking,
   log,
   order,
   groupOrder,
@@ -72,6 +75,7 @@ export function Today({
     groupOrder,
   )
   const { done } = dayStats(tasks, log, date, today)
+  const money = tracking === 'dollars' ? dollars(tasks, plans, log, date, today) : undefined
   const future = date > today
 
   function setState(task: Task, state: State) {
@@ -159,7 +163,7 @@ export function Today({
         </button>
       </header>
       <p class="count">
-        {done} of {due.length} done
+        {money ? `$${money.earned} of $${money.possible} earned` : `${done} of ${due.length} done`}
         {date !== today && (
           <button class="link" onClick={() => setDate(today)}>
             Back to today
@@ -205,6 +209,7 @@ export function Today({
         const g = namedSections.indexOf(section)
         const isCollapsed = collapsed.includes(section.group)
         const groupDone = section.tasks.reduce((sum, t) => sum + credit(stateOn(t, date, log)), 0)
+        const groupMoney = money && dollars(section.tasks, plans, log, date, today)
         const sequential = plans.some((p) => p.sequential && p.title === section.group)
         const shown = sequential && !reordering ? oneAtATime(section.tasks, date, log) : section.tasks
         return (
@@ -222,7 +227,9 @@ export function Today({
                     </span>
                     {section.group}
                     <span class="group-count">
-                      {groupDone}/{section.tasks.length}
+                      {groupMoney
+                        ? `$${groupMoney.earned}/$${groupMoney.possible}`
+                        : `${groupDone}/${section.tasks.length}`}
                     </span>
                   </button>
                 </h2>
