@@ -15,7 +15,7 @@ import {
   type State,
   type Task,
 } from './tasks'
-import { dollars, type Tracking } from './money'
+import { dollars, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, type Plan } from './plans'
 import { TaskForm } from './TaskForm'
@@ -209,7 +209,10 @@ export function Today({
         const g = namedSections.indexOf(section)
         const isCollapsed = collapsed.includes(section.group)
         const groupDone = section.tasks.reduce((sum, t) => sum + credit(stateOn(t, date, log)), 0)
-        const groupMoney = money && dollars(section.tasks, plans, log, date, today)
+        // All the group's tasks, not just today's, so its weekly bonus can count the whole week
+        const groupMoney = money && dollars(tasks.filter((t) => groupOf(t) === section.group), plans, log, date, today)
+        const weeklyPlan = money && plans.find((p) => p.weeklyBonus && p.title === section.group)
+        const week = weeklyPlan && weekProgress(weeklyPlan, tasks, log, date, today)
         const sequential = plans.some((p) => p.sequential && p.title === section.group)
         const shown = sequential && !reordering ? oneAtATime(section.tasks, date, log) : section.tasks
         return (
@@ -243,6 +246,11 @@ export function Today({
                 )}
               </div>
             )}
+            {weeklyPlan && week && (
+              <p class="week-bonus">
+                Week bonus ${weeklyPlan.weeklyBonus} · {week.done} of {week.due} done
+              </p>
+            )}
             <ul class="tasks" hidden={isCollapsed}>
               {shown.map((t, i) => {
                 const state = stateOn(t, date, log)
@@ -269,6 +277,7 @@ export function Today({
                       <span class="name">{t.title}</span>
                       <span class="repeat">
                         {describeRepeat(t.repeat, t.start, t.end)}
+                        {money && ` · $${valueOf(t)}`}
                         {source && <span class="tag">{source}</span>}
                       </span>
                       {t.notes && <span class="notes">{t.notes}</span>}
