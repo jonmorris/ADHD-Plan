@@ -153,6 +153,17 @@ export function stateOn(task: Task, key: string, log: Log): State {
   return state === -1 && latest !== key ? 0 : state
 }
 
+// A sequential group's tasks for a day: the ones done (or ✕) and the first one still to do.
+export function oneAtATime(tasks: Task[], key: string, log: Log): Task[] {
+  let shownNext = false
+  return tasks.filter((t) => {
+    const s = stateOn(t, key, log)
+    if (s === 1 || s === -1) return true
+    if (shownNext) return false
+    return (shownNext = true)
+  })
+}
+
 export function dayStats(tasks: Task[], log: Log, key: string, today: string) {
   const due = tasks.filter((t) => isDueOn(t, key, log, today))
   return { due: due.length, done: due.reduce((sum, t) => sum + credit(stateOn(t, key, log)), 0) }

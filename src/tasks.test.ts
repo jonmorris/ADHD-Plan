@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byCadence, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
+import { byCadence, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, oneAtATime, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -256,5 +256,26 @@ describe('sortTasks', () => {
   it('uses the saved order, with tasks not in it after, by cadence', () => {
     const ids = sortTasks([daily, yearly, oneOff, weekly], ['yearly', 'daily']).map((x) => x.id)
     expect(ids).toEqual(['yearly', 'daily', 'one-off', 'weekly'])
+  })
+})
+
+describe('oneAtATime', () => {
+  const day = '2026-11-05'
+  const [a, b, c, d] = ['a', 'b', 'c', 'd'].map((id) => task({ kind: 'daily', every: 1 }, '2026-11-01', { id }))
+  const ids = (log: Log) => oneAtATime([a, b, c, d], day, log).map((t) => t.id)
+
+  it('shows only the first task until it is done', () => {
+    expect(ids({})).toEqual(['a'])
+    expect(ids({ [day]: { a: 0.5 } })).toEqual(['a'])
+  })
+
+  it('keeps done and ✕ tasks and reveals the next one', () => {
+    expect(ids({ [day]: { a: 1 } })).toEqual(['a', 'b'])
+    expect(ids({ [day]: { a: 1, b: -1 } })).toEqual(['a', 'b', 'c'])
+  })
+
+  it('hides the revealed task again when the one before is undone', () => {
+    expect(ids({ [day]: { a: 1, b: 0 } })).toEqual(['a', 'b'])
+    expect(ids({ [day]: { a: 0, b: 1 } })).toEqual(['a', 'b'])
   })
 })

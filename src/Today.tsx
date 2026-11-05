@@ -8,6 +8,7 @@ import {
   describeRepeat,
   isDueOn,
   nextState,
+  oneAtATime,
   sortTasks,
   stateOn,
   type Log,
@@ -204,6 +205,8 @@ export function Today({
         const g = namedSections.indexOf(section)
         const isCollapsed = collapsed.includes(section.group)
         const groupDone = section.tasks.reduce((sum, t) => sum + credit(stateOn(t, date, log)), 0)
+        const sequential = plans.some((p) => p.sequential && p.title === section.group)
+        const shown = sequential && !reordering ? oneAtATime(section.tasks, date, log) : section.tasks
         return (
           <section key={section.group || '(none)'}>
             {section.group && (
@@ -234,7 +237,7 @@ export function Today({
               </div>
             )}
             <ul class="tasks" hidden={isCollapsed}>
-              {section.tasks.map((t, i) => {
+              {shown.map((t, i) => {
                 const state = stateOn(t, date, log)
                 const source = sourceOf(t)
                 return (
