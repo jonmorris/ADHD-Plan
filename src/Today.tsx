@@ -266,8 +266,14 @@ export function Today({
     setEditing({ id: crypto.randomUUID(), title: '', start: date, repeat: { kind: 'none' } })
   }
 
+  // Priorities are reordered within the day's priority list, not in the home groups
+  function movePriority(index: number, step: -1 | 1) {
+    const ids = swap(dayPriorities, priorityTasks[index].id, priorityTasks[index + step].id)
+    savePriorities({ ...priorities, [date]: ids })
+  }
+
   // One task on the list. Priorities are copies of tasks from their home groups: the star marks
-  // the home copy, and only home copies can be moved.
+  // the home copy.
   function taskRow(t: Task, i: number, list: Task[], home: boolean) {
     const state = stateOn(t, date, log)
     const source = sourceOf(t)
@@ -316,12 +322,12 @@ export function Today({
             {DEFER}
           </button>
         )}
-        {reordering && home && (
+        {reordering && (
           <MoveButtons
             label={t.title}
             first={i === 0}
             last={i === list.length - 1}
-            move={(step) => moveTask(list, i, step)}
+            move={(step) => (home ? moveTask(list, i, step) : movePriority(i, step))}
           />
         )}
       </li>
