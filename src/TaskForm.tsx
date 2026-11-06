@@ -12,14 +12,17 @@ type Props = {
   groups?: string[] // no Group field without these (plan items take their plan's group)
   showValue?: boolean // dollar value field, for plan items when tracking dollars
   isNew: boolean
-  onSave: (task: Task) => void
+  isReminder?: boolean // editing a reminder: title, notes and schedule only
+  canBeReminder?: boolean // show the Task / Reminder switch (new items on Today)
+  onSave: (task: Task, asReminder: boolean) => void
   onRemove: () => void
   onClose: () => void
 }
 
 const NEW_GROUP = '\u0000new'
 
-export function TaskForm({ task, groups, showValue, isNew, onSave, onRemove, onClose }: Props) {
+export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeReminder, onSave, onRemove, onClose }: Props) {
+  const [reminder, setReminder] = useState(!!isReminder)
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
@@ -48,7 +51,7 @@ export function TaskForm({ task, groups, showValue, isNew, onSave, onRemove, onC
       allowHalf: allowHalf || undefined,
       value: value === 1 ? undefined : value,
       ...(groups && { group: group === NEW_GROUP ? newGroup.trim() : group }),
-    })
+    }, reminder)
   }
 
   function toggleDay(day: number) {
@@ -58,10 +61,22 @@ export function TaskForm({ task, groups, showValue, isNew, onSave, onRemove, onC
   return (
     <div class="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <form class="sheet" onSubmit={submit}>
-        <h2>{isNew ? 'New task' : 'Edit task'}</h2>
+        <h2>
+          {isNew ? 'New' : 'Edit'} {reminder ? 'reminder' : 'task'}
+        </h2>
+
+        {canBeReminder && (
+          <div class="ranges" role="group" aria-label="Type">
+            {[false, true].map((r) => (
+              <button type="button" class={reminder === r ? 'on' : ''} aria-pressed={reminder === r} onClick={() => setReminder(r)}>
+                {r ? 'Reminder' : 'Task'}
+              </button>
+            ))}
+          </div>
+        )}
 
         <label class="field">
-          Task
+          {reminder ? 'Reminder' : 'Task'}
           <input value={title} onInput={(e) => setTitle(e.currentTarget.value)} required autoFocus />
         </label>
 
@@ -129,7 +144,7 @@ export function TaskForm({ task, groups, showValue, isNew, onSave, onRemove, onC
           </label>
         )}
 
-        {groups && (
+        {groups && !reminder && (
           <label class="field">
             Group
             <select value={group} onChange={(e) => setGroup(e.currentTarget.value)}>
@@ -142,14 +157,14 @@ export function TaskForm({ task, groups, showValue, isNew, onSave, onRemove, onC
           </label>
         )}
 
-        {group === NEW_GROUP && (
+        {group === NEW_GROUP && !reminder && (
           <label class="field">
             New group name
             <input value={newGroup} onInput={(e) => setNewGroup(e.currentTarget.value)} required />
           </label>
         )}
 
-        {showValue && (
+        {showValue && !reminder && (
           <label class="field">
             Value when done
             <select value={value} onChange={(e) => setValue(Number(e.currentTarget.value))}>
@@ -160,13 +175,15 @@ export function TaskForm({ task, groups, showValue, isNew, onSave, onRemove, onC
           </label>
         )}
 
-        <label class="check-field">
-          <input type="checkbox" checked={allowHalf} onChange={(e) => setAllowHalf(e.currentTarget.checked)} />
-          <span>
-            Allow half done
-            <small>Tap once for half done, twice for done</small>
-          </span>
-        </label>
+        {!reminder && (
+          <label class="check-field">
+            <input type="checkbox" checked={allowHalf} onChange={(e) => setAllowHalf(e.currentTarget.checked)} />
+            <span>
+              Allow half done
+              <small>Tap once for half done, twice for done</small>
+            </span>
+          </label>
+        )}
 
         <div class="actions">
           {!isNew && (
