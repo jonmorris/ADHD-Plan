@@ -32,26 +32,34 @@ export function weekProgress(plan: Plan, tasks: Task[], log: Log, key: string, t
   return lastDay ? { due, done, lastDay } : undefined
 }
 
+// The plan's daily tasks on `key`: how many are due and how many done.
+export function dayProgress(plan: Plan, tasks: Task[], log: Log, key: string, today: string) {
+  const daily = tasks.filter((t) => t.plan === plan.id && t.repeat.kind === 'daily' && isDueOn(t, key, log, today))
+  const done = daily.filter((t) => stateOn(t, key, log) === 1).length
+  return daily.length ? { due: daily.length, done } : undefined
+}
+
+// Task values and plan bonuses are tallied separately.
 export function dollars(tasks: Task[], plans: Plan[], log: Log, key: string, today: string) {
-  const due = tasks.filter((t) => isDueOn(t, key, log, today))
-  const done = (t: Task) => stateOn(t, key, log) === 1
   let earned = 0
   let possible = 0
-  for (const t of due) {
+  for (const t of tasks.filter((t) => isDueOn(t, key, log, today))) {
     possible += valueOf(t)
-    if (done(t)) earned += valueOf(t)
+    if (stateOn(t, key, log) === 1) earned += valueOf(t)
   }
+  let bonusEarned = 0
+  let bonusPossible = 0
   for (const plan of plans) {
-    const daily = due.filter((t) => t.plan === plan.id && t.repeat.kind === 'daily')
-    if (plan.bonus && daily.length > 0) {
-      possible += plan.bonus
-      if (daily.every(done)) earned += plan.bonus
+    const day = plan.bonus ? dayProgress(plan, tasks, log, key, today) : undefined
+    if (day) {
+      bonusPossible += plan.bonus!
+      if (day.done === day.due) bonusEarned += plan.bonus!
     }
     const week = plan.weeklyBonus ? weekProgress(plan, tasks, log, key, today) : undefined
     if (week && week.lastDay === key) {
-      possible += plan.weeklyBonus!
-      if (week.done === week.due) earned += plan.weeklyBonus!
+      bonusPossible += plan.weeklyBonus!
+      if (week.done === week.due) bonusEarned += plan.weeklyBonus!
     }
   }
-  return { earned, possible }
+  return { earned, possible, bonusEarned, bonusPossible }
 }

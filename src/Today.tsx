@@ -15,7 +15,7 @@ import {
   type State,
   type Task,
 } from './tasks'
-import { dollars, valueOf, weekProgress, type Tracking } from './money'
+import { dayProgress, dollars, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, type Plan } from './plans'
 import { TaskForm } from './TaskForm'
@@ -183,6 +183,7 @@ export function Today({
       </header>
       <p class="count">
         {money ? `$${money.earned} of $${money.possible} earned` : `${done} of ${due.length} done`}
+        {money && money.bonusPossible > 0 && ` · Bonuses $${money.bonusEarned} of $${money.bonusPossible}`}
         {date !== today && (
           <button class="link" onClick={() => setDate(today)}>
             Back to today
@@ -230,6 +231,8 @@ export function Today({
         const groupDone = section.tasks.reduce((sum, t) => sum + credit(stateOn(t, date, log)), 0)
         // All the group's tasks, not just today's, so its weekly bonus can count the whole week
         const groupMoney = money && dollars(tasks.filter((t) => groupOf(t) === section.group), plans, log, date, today)
+        const dailyPlan = money && plans.find((p) => p.bonus && p.title === section.group)
+        const day = dailyPlan && dayProgress(dailyPlan, tasks, log, date, today)
         const weeklyPlan = money && plans.find((p) => p.weeklyBonus && p.title === section.group)
         const week = weeklyPlan && weekProgress(weeklyPlan, tasks, log, date, today)
         const sequential = plans.some((p) => p.sequential && p.title === section.group)
@@ -264,6 +267,11 @@ export function Today({
                   />
                 )}
               </div>
+            )}
+            {dailyPlan && day && (
+              <p class="week-bonus">
+                Day bonus ${dailyPlan.bonus} · {day.done} of {day.due} done
+              </p>
             )}
             {weeklyPlan && week && (
               <p class="week-bonus">

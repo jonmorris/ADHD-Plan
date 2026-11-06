@@ -21,8 +21,11 @@ export function Analytics({ tasks, plans, log, today }: Props) {
   const totalDue = perDay.reduce((sum, d) => sum + d.due, 0)
   const maxDue = Math.max(1, ...perDay.map((d) => d.due))
   const readout = perDay.find((d) => d.date === selected) ?? perDay[perDay.length - 1]
-  const earnedOn = (date: string) => dollars(tasks, plans, log, date, today).earned
-  const totalEarned = perDay.reduce((sum, d) => sum + earnedOn(d.date), 0)
+  const moneyOn = (date: string) => dollars(tasks, plans, log, date, today)
+  const perDayMoney = perDay.map((d) => moneyOn(d.date))
+  const totalEarned = perDayMoney.reduce((sum, m) => sum + m.earned, 0)
+  const totalBonuses = perDayMoney.reduce((sum, m) => sum + m.bonusEarned, 0)
+  const readoutMoney = moneyOn(readout.date)
   const weeklyBonuses = plans.flatMap((plan) => {
     const week = plan.weeklyBonus ? weekProgress(plan, tasks, log, today, today) : undefined
     return week ? [{ plan, week }] : []
@@ -57,6 +60,10 @@ export function Analytics({ tasks, plans, log, today }: Props) {
           <span class="label">Dollars earned</span>
           <span class="value">${totalEarned}</span>
         </div>
+        <div class="stat">
+          <span class="label">Bonuses earned</span>
+          <span class="value">${totalBonuses}</span>
+        </div>
       </div>
 
       <section>
@@ -65,7 +72,8 @@ export function Analytics({ tasks, plans, log, today }: Props) {
           <strong>
             {readout.done} of {readout.due} done
           </strong>{' '}
-          · ${earnedOn(readout.date)} earned · {formatDay(readout.date)}
+          · ${readoutMoney.earned} earned
+          {readoutMoney.bonusEarned > 0 && ` + $${readoutMoney.bonusEarned} bonus`} · {formatDay(readout.date)}
         </p>
         <div class="chart">
           {perDay.map((d) => (
