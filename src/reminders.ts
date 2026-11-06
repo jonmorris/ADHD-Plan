@@ -3,7 +3,7 @@
 import { occursOn, type Task } from './tasks'
 
 // Kinds of reminder, each shown with its own icon. Add new ones here.
-export const REMINDER_TYPES = { reminder: 'Reminder', event: 'Event' } as const
+export const REMINDER_TYPES = { reminder: 'Reminder', event: 'Event', meal: 'Meal' } as const
 export type ReminderType = keyof typeof REMINDER_TYPES
 
 export type Reminder = Pick<Task, 'id' | 'title' | 'notes' | 'start' | 'repeat' | 'end' | 'removedOn'> & {
