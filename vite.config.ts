@@ -6,6 +6,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   // Served from https://jonmorris.github.io/ADHD-Plan/
   base: '/ADHD-Plan/',
+  // Shown at the bottom of the app, to tell which version a phone is running
+  define: {
+    __BUILD__: JSON.stringify(
+      `${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC · ${(process.env.GITHUB_SHA ?? 'local').slice(0, 7)}`,
+    ),
+  },
   plugins: [
     preact(),
     VitePWA({
