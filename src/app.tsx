@@ -6,6 +6,7 @@ import type { Tracking } from './money'
 import type { Page } from './notes'
 import { Playbook } from './Playbook'
 import { seedPlans, type Plan } from './plans'
+import type { Dismissed, Reminder } from './reminders'
 import { usePersisted } from './store'
 import type { Log, Task } from './tasks'
 import { Today } from './Today'
@@ -26,11 +27,13 @@ export function App() {
   // The built-in plans, until the user's own copies are saved
   const [plans, savePlans] = usePersisted<Plan[]>('plans', seedPlans(today))
   const [tracking, saveTracking] = usePersisted<Tracking>('tracking', 'count')
+  const [reminders, saveReminders] = usePersisted<Reminder[]>('reminders', [])
+  const [dismissed, saveDismissed] = usePersisted<Dismissed>('dismissed', {})
 
-  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed) return null
 
   function exportData() {
-    const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, order, groupOrder }, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, order, groupOrder }, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `adhd-plan-${today}.json`
@@ -46,6 +49,8 @@ export function App() {
             tasks={tasks}
             plans={plans}
             tracking={tracking}
+            reminders={reminders}
+            dismissed={dismissed}
             log={log}
             order={order}
             groupOrder={groupOrder}
@@ -56,6 +61,8 @@ export function App() {
             saveOrder={saveOrder}
             saveGroupOrder={saveGroupOrder}
             saveCollapsed={saveCollapsed}
+            saveReminders={saveReminders}
+            saveDismissed={saveDismissed}
           />
         )}
         {tab === 'playbook' && (

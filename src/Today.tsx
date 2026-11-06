@@ -18,12 +18,15 @@ import {
 import { dayProgress, dollars, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, type Plan } from './plans'
+import { remindersOn, toggleDismissed, type Dismissed, type Reminder } from './reminders'
 import { TaskForm } from './TaskForm'
 
 type Props = {
   tasks: Task[]
   plans: Plan[]
   tracking: Tracking
+  reminders: Reminder[]
+  dismissed: Dismissed
   log: Log
   order: string[]
   groupOrder: string[]
@@ -34,6 +37,8 @@ type Props = {
   saveOrder: (order: string[]) => void
   saveGroupOrder: (order: string[]) => void
   saveCollapsed: (groups: string[]) => void
+  saveReminders: (reminders: Reminder[]) => void
+  saveDismissed: (dismissed: Dismissed) => void
 }
 
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
@@ -53,6 +58,29 @@ const DEFER = (
   </svg>
 )
 
+const CLOSE = (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+  </svg>
+)
+
+// Curved arrow back, for restoring a dismissed reminder
+const RESTORE = (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <path
+      d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+)
+
+// Key in `collapsed` for the reminders section (can't clash with a group name)
+const REMINDERS = '\u0000reminders'
+
 function dayLabel(date: string, today: string) {
   if (date === today) return 'Today'
   if (date === addDays(today, -1)) return 'Yesterday'
@@ -64,6 +92,8 @@ export function Today({
   tasks,
   plans,
   tracking,
+  reminders,
+  dismissed,
   log,
   order,
   groupOrder,
@@ -74,9 +104,12 @@ export function Today({
   saveOrder,
   saveGroupOrder,
   saveCollapsed,
+  saveReminders,
+  saveDismissed,
 }: Props) {
   const [date, setDate] = useState(today)
   const [editing, setEditing] = useState<Task>()
+  const [editingReminder, setEditingReminder] = useState(false)
   const [reordering, setReordering] = useState(false)
   useBack(!!editing, () => setEditing(undefined))
 
@@ -91,6 +124,8 @@ export function Today({
   const { done } = dayStats(tasks, log, date, today)
   const money = tracking === 'dollars' ? dollars(tasks, plans, log, date, today) : undefined
   const future = date > today
+  const dayReminders = remindersOn(reminders, dismissed, date)
+  const remindersCollapsed = collapsed.includes(REMINDERS)
 
   function setState(task: Task, state: State) {
     saveLog({ ...log, [date]: { ...log[date], [task.id]: state } })
@@ -113,7 +148,14 @@ export function Today({
     setState(task, nextState(stateOn(task, date, log), !!task.allowHalf))
   }
 
-  function save(task: Task) {
+  function save(task: Task, asReminder: boolean) {
+    if (asReminder) {
+      const { id, title, notes, start, repeat, end } = task
+      const reminder: Reminder = { id, title, notes, start, repeat, end }
+      const known = reminders.some((r) => r.id === id)
+      saveReminders(known ? reminders.map((r) => (r.id === id ? reminder : r)) : [...reminders, reminder])
+      return setEditing(undefined)
+    }
     const exists = tasks.some((t) => t.id === task.id)
     saveTasks(exists ? tasks.map((t) => (t.id === task.id ? task : t)) : [...tasks, task])
     // New tasks go to the top of their list
@@ -127,6 +169,11 @@ export function Today({
   }
 
   function remove(task: Task) {
+    if (editingReminder) {
+      if (!confirm(`Remove the reminder "${task.title}"?`)) return
+      saveReminders(reminders.map((r) => (r.id === task.id ? { ...r, removedOn: today } : r)))
+      return setEditing(undefined)
+    }
     if (!confirm(`Remove "${task.title}"? Its history stays in Analytics.`)) return
     // A removed plan task stays removed if the plan is turned off and on again
     saveTasks(tasks.map((t) => (t.id === task.id ? { ...t, removedOn: today, dismissed: !!t.plan || undefined } : t)))
@@ -156,6 +203,7 @@ export function Today({
   }
 
   function addTask() {
+    setEditingReminder(false)
     setEditing({ id: crypto.randomUUID(), title: '', start: date, repeat: { kind: 'none' } })
   }
 
@@ -214,6 +262,72 @@ export function Today({
           </button>
         )}
       </div>
+
+      <section class="reminders">
+        <div class="group-head">
+          <h2>
+            <button
+              class="group-toggle"
+              aria-expanded={!remindersCollapsed}
+              onClick={() => toggleCollapsed(REMINDERS)}
+            >
+              <span class="chevron" aria-hidden="true">
+                {remindersCollapsed ? '▸' : '▾'}
+              </span>
+              Reminders
+              <span class="group-count">{dayReminders.active.length}</span>
+            </button>
+          </h2>
+        </div>
+        <div hidden={remindersCollapsed}>
+          {dayReminders.active.length === 0 && <p class="reminders-empty">No reminders</p>}
+          <ul class="tasks">
+            {dayReminders.active.map((r) => (
+              <li key={r.id}>
+                <button
+                  class="title"
+                  onClick={() => {
+                    setEditingReminder(true)
+                    setEditing(r)
+                  }}
+                >
+                  <span class="name">{r.title}</span>
+                  {r.notes && <span class="notes">{r.notes}</span>}
+                </button>
+                <button
+                  class="defer"
+                  aria-label={`Dismiss ${r.title}`}
+                  onClick={() => saveDismissed(toggleDismissed(dismissed, date, r.id))}
+                >
+                  {CLOSE}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {dayReminders.dismissed.length > 0 && (
+            <>
+              <h3 class="reminders-sub">Dismissed</h3>
+              <ul class="tasks dismissed-reminders">
+                {dayReminders.dismissed.map((r) => (
+                  <li key={r.id}>
+                    <span class="title">
+                      <span class="name">{r.title}</span>
+                      {r.notes && <span class="notes">{r.notes}</span>}
+                    </span>
+                    <button
+                      class="defer"
+                      aria-label={`Restore ${r.title}`}
+                      onClick={() => saveDismissed(toggleDismissed(dismissed, date, r.id))}
+                    >
+                      {RESTORE}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </section>
 
       {due.length === 0 && (
         <p class="empty">
@@ -336,7 +450,9 @@ export function Today({
         <TaskForm
           task={editing}
           groups={allGroups}
-          isNew={!tasks.some((t) => t.id === editing.id)}
+          isNew={!(editingReminder ? reminders : tasks).some((t) => t.id === editing.id)}
+          isReminder={editingReminder}
+          canBeReminder={!editingReminder && !tasks.some((t) => t.id === editing.id)}
           onSave={save}
           onRemove={() => remove(editing)}
           onClose={() => setEditing(undefined)}
