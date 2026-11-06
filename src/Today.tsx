@@ -112,6 +112,19 @@ const REMINDER_ICONS: Record<ReminderType, preact.JSX.Element> = {
       />
     </svg>
   ),
+  // Fork and knife
+  meal: (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path
+        d="M6 3v6a2 2 0 0 0 4 0V3M8 3v18M17 21V3c-2 1-3 4-3 7 0 2 1 3 3 3"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  ),
 }
 
 function dayLabel(date: string, today: string) {
@@ -520,10 +533,14 @@ export function Today({
                     {isCollapsed ? '▸' : '▾'}
                   </span>
                   {section.group || 'Tasks'}
-                  <span class="group-count">
-                    {groupMoney
-                      ? `$${groupMoney.earned}/$${groupMoney.possible}`
-                      : `${groupDone}/${section.tasks.length}`}
+                  <span class="group-end">
+                    {dailyPlan && day && <span class="group-bonus">Day bonus ${dailyPlan.bonus}</span>}
+                    {weeklyPlan && week && <span class="group-bonus">Week bonus ${weeklyPlan.weeklyBonus}</span>}
+                    <span class="group-count">
+                      {groupMoney
+                        ? `$${groupMoney.earned}/$${groupMoney.possible}`
+                        : `${groupDone}/${section.tasks.length}`}
+                    </span>
                   </span>
                 </button>
               </h2>
@@ -536,16 +553,6 @@ export function Today({
                 />
               )}
             </div>
-            {dailyPlan && day && (
-              <p class="week-bonus">
-                Day bonus ${dailyPlan.bonus} · {day.done} of {day.due} done
-              </p>
-            )}
-            {weeklyPlan && week && (
-              <p class="week-bonus">
-                Week bonus ${weeklyPlan.weeklyBonus} · {week.done} of {week.due} done
-              </p>
-            )}
             <ul class="tasks" hidden={isCollapsed}>
               {shown.map((t, i) => taskRow(t, i, section.tasks, true))}
             </ul>
