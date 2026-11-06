@@ -6,6 +6,7 @@ import type { Tracking } from './money'
 import type { Page } from './notes'
 import { Playbook } from './Playbook'
 import { seedPlans, type Plan } from './plans'
+import type { Priorities } from './priorities'
 import type { Dismissed, Reminder } from './reminders'
 import { usePersisted } from './store'
 import type { Log, Task } from './tasks'
@@ -29,11 +30,12 @@ export function App() {
   const [tracking, saveTracking] = usePersisted<Tracking>('tracking', 'count')
   const [reminders, saveReminders] = usePersisted<Reminder[]>('reminders', [])
   const [dismissed, saveDismissed] = usePersisted<Dismissed>('dismissed', {})
+  const [priorities, savePriorities] = usePersisted<Priorities>('priorities', {})
 
-  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities) return null
 
   function exportData() {
-    const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, order, groupOrder }, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, priorities, order, groupOrder }, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `adhd-plan-${today}.json`
@@ -51,6 +53,7 @@ export function App() {
             tracking={tracking}
             reminders={reminders}
             dismissed={dismissed}
+            priorities={priorities}
             log={log}
             order={order}
             groupOrder={groupOrder}
@@ -63,6 +66,7 @@ export function App() {
             saveCollapsed={saveCollapsed}
             saveReminders={saveReminders}
             saveDismissed={saveDismissed}
+            savePriorities={savePriorities}
           />
         )}
         {tab === 'playbook' && (

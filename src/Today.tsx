@@ -18,6 +18,7 @@ import {
 import { dayProgress, dollars, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, type Plan } from './plans'
+import { MAX_PRIORITIES, togglePriority, type Priorities } from './priorities'
 import { remindersOn, toggleDismissed, type Dismissed, type Reminder } from './reminders'
 import { TaskForm } from './TaskForm'
 
@@ -27,6 +28,7 @@ type Props = {
   tracking: Tracking
   reminders: Reminder[]
   dismissed: Dismissed
+  priorities: Priorities
   log: Log
   order: string[]
   groupOrder: string[]
@@ -39,6 +41,7 @@ type Props = {
   saveCollapsed: (groups: string[]) => void
   saveReminders: (reminders: Reminder[]) => void
   saveDismissed: (dismissed: Dismissed) => void
+  savePriorities: (priorities: Priorities) => void
 }
 
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
@@ -78,8 +81,9 @@ const RESTORE = (
   </svg>
 )
 
-// Key in `collapsed` for the reminders section (can't clash with a group name)
+// Keys in `collapsed` for the reminders and priorities sections (can't clash with a group name)
 const REMINDERS = '\u0000reminders'
+const PRIORITIES = '\u0000priorities'
 
 function dayLabel(date: string, today: string) {
   if (date === today) return 'Today'
@@ -94,6 +98,7 @@ export function Today({
   tracking,
   reminders,
   dismissed,
+  priorities,
   log,
   order,
   groupOrder,
@@ -106,6 +111,7 @@ export function Today({
   saveCollapsed,
   saveReminders,
   saveDismissed,
+  savePriorities,
 }: Props) {
   const [date, setDate] = useState(today)
   const [editing, setEditing] = useState<Task>()
@@ -126,6 +132,10 @@ export function Today({
   const future = date > today
   const dayReminders = remindersOn(reminders, dismissed, date)
   const remindersCollapsed = collapsed.includes(REMINDERS)
+  const dayPriorities = priorities[date] ?? []
+  const priorityTasks = dayPriorities.flatMap((id) => due.filter((t) => t.id === id))
+  const prioritiesCollapsed = collapsed.includes(PRIORITIES)
+  const [priorityNote, setPriorityNote] = useState('')
 
   function setState(task: Task, state: State) {
     saveLog({ ...log, [date]: { ...log[date], [task.id]: state } })
@@ -141,6 +151,25 @@ export function Today({
       held.current = true
       setState(task, stateOn(task, date, log) === -1 ? 0 : -1)
     }, 500)
+  }
+
+  // Press and hold a task's name to make it one of the day's priorities; hold again to drop it.
+  const titleHeld = useRef(false)
+
+  function startPriorityHold(task: Task) {
+    titleHeld.current = false
+    holdTimer.current = window.setTimeout(() => {
+      titleHeld.current = true
+      const next = togglePriority(priorities, date, task.id)
+      if (next) return savePriorities(next)
+      setPriorityNote(`You already have ${MAX_PRIORITIES} priorities. Hold one to remove it first.`)
+      window.setTimeout(() => setPriorityNote(''), 4000)
+    }, 500)
+  }
+
+  function openTask(task: Task) {
+    if (titleHeld.current) return void (titleHeld.current = false)
+    setEditing(task)
   }
 
   function tap(task: Task) {
@@ -205,6 +234,68 @@ export function Today({
   function addTask() {
     setEditingReminder(false)
     setEditing({ id: crypto.randomUUID(), title: '', start: date, repeat: { kind: 'none' } })
+  }
+
+  // One task on the list. Priorities are copies of tasks from their home groups: the star marks
+  // the home copy, and only home copies can be moved.
+  function taskRow(t: Task, i: number, list: Task[], home: boolean) {
+    const state = stateOn(t, date, log)
+    const source = sourceOf(t)
+    return (
+      <li key={t.id} class={`c-${t.repeat.kind}${state === 1 ? ' done' : state === -1 ? ' not-done' : ''}`}>
+        <button
+          role="checkbox"
+          class={`check ${CHECK_CLASS[state]}`}
+          aria-checked={state === 1 ? 'true' : state === 0.5 ? 'mixed' : 'false'}
+          aria-label={`${t.title}: ${LABELS[state]}`}
+          disabled={reordering || future}
+          onClick={() => tap(t)}
+          onPointerDown={() => startHold(t)}
+          onPointerUp={() => clearTimeout(holdTimer.current)}
+          onPointerLeave={() => clearTimeout(holdTimer.current)}
+          onPointerCancel={() => clearTimeout(holdTimer.current)}
+          onContextMenu={(e) => e.preventDefault()}
+        />
+        <button
+          class="title"
+          disabled={reordering}
+          onClick={() => openTask(t)}
+          onPointerDown={() => startPriorityHold(t)}
+          onPointerUp={() => clearTimeout(holdTimer.current)}
+          onPointerLeave={() => clearTimeout(holdTimer.current)}
+          onPointerCancel={() => clearTimeout(holdTimer.current)}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <span class="name">
+            {home && dayPriorities.includes(t.id) && (
+              <span class="star" aria-label="Priority">
+                ★{' '}
+              </span>
+            )}
+            {t.title}
+          </span>
+          <span class="repeat">
+            {describeRepeat(t.repeat, t.start, t.end)}
+            {money && ` · $${valueOf(t)}`}
+            {source && <span class="tag">{source}</span>}
+          </span>
+          {t.notes && <span class="notes">{t.notes}</span>}
+        </button>
+        {!reordering && t.repeat.kind === 'none' && date >= today && state !== 1 && (
+          <button class="defer" aria-label={`Defer ${t.title} to the next day`} onClick={() => defer(t)}>
+            {DEFER}
+          </button>
+        )}
+        {reordering && home && (
+          <MoveButtons
+            label={t.title}
+            first={i === 0}
+            last={i === list.length - 1}
+            move={(step) => moveTask(list, i, step)}
+          />
+        )}
+      </li>
+    )
   }
 
   return (
@@ -329,6 +420,35 @@ export function Today({
         </div>
       </section>
 
+      <section class="priorities">
+        <div class="group-head">
+          <h2>
+            <button
+              class="group-toggle"
+              aria-expanded={!prioritiesCollapsed}
+              onClick={() => toggleCollapsed(PRIORITIES)}
+            >
+              <span class="chevron" aria-hidden="true">
+                {prioritiesCollapsed ? '▸' : '▾'}
+              </span>
+              Priorities
+              <span class="group-count">
+                {priorityTasks.length}/{MAX_PRIORITIES}
+              </span>
+            </button>
+          </h2>
+        </div>
+        <div hidden={prioritiesCollapsed}>
+          {priorityNote && (
+            <p class="priority-note" role="status">
+              {priorityNote}
+            </p>
+          )}
+          {priorityTasks.length === 0 && <p class="reminders-empty">Press and hold a task to make it a priority.</p>}
+          <ul class="tasks">{priorityTasks.map((t, i) => taskRow(t, i, priorityTasks, false))}</ul>
+        </div>
+      </section>
+
       {due.length === 0 && (
         <p class="empty">
           {date === today
@@ -393,52 +513,7 @@ export function Today({
               </p>
             )}
             <ul class="tasks" hidden={isCollapsed}>
-              {shown.map((t, i) => {
-                const state = stateOn(t, date, log)
-                const source = sourceOf(t)
-                return (
-                  <li
-                    key={t.id}
-                    class={`c-${t.repeat.kind}${state === 1 ? ' done' : state === -1 ? ' not-done' : ''}`}
-                  >
-                    <button
-                      role="checkbox"
-                      class={`check ${CHECK_CLASS[state]}`}
-                      aria-checked={state === 1 ? 'true' : state === 0.5 ? 'mixed' : 'false'}
-                      aria-label={`${t.title}: ${LABELS[state]}`}
-                      disabled={reordering || future}
-                      onClick={() => tap(t)}
-                      onPointerDown={() => startHold(t)}
-                      onPointerUp={() => clearTimeout(holdTimer.current)}
-                      onPointerLeave={() => clearTimeout(holdTimer.current)}
-                      onPointerCancel={() => clearTimeout(holdTimer.current)}
-                      onContextMenu={(e) => e.preventDefault()}
-                    />
-                    <button class="title" disabled={reordering} onClick={() => setEditing(t)}>
-                      <span class="name">{t.title}</span>
-                      <span class="repeat">
-                        {describeRepeat(t.repeat, t.start, t.end)}
-                        {money && ` · $${valueOf(t)}`}
-                        {source && <span class="tag">{source}</span>}
-                      </span>
-                      {t.notes && <span class="notes">{t.notes}</span>}
-                    </button>
-                    {!reordering && t.repeat.kind === 'none' && date >= today && state !== 1 && (
-                      <button class="defer" aria-label={`Defer ${t.title} to the next day`} onClick={() => defer(t)}>
-                        {DEFER}
-                      </button>
-                    )}
-                    {reordering && (
-                      <MoveButtons
-                        label={t.title}
-                        first={i === 0}
-                        last={i === section.tasks.length - 1}
-                        move={(step) => moveTask(section.tasks, i, step)}
-                      />
-                    )}
-                  </li>
-                )
-              })}
+              {shown.map((t, i) => taskRow(t, i, section.tasks, true))}
             </ul>
           </section>
         )
