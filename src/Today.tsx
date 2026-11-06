@@ -81,9 +81,10 @@ const RESTORE = (
   </svg>
 )
 
-// Keys in `collapsed` for the reminders and priorities sections (can't clash with a group name)
+// Keys in `collapsed` for the reminders, priorities and ungrouped sections (can't clash with a group name)
 const REMINDERS = '\u0000reminders'
 const PRIORITIES = '\u0000priorities'
+const UNGROUPED = '\u0000ungrouped'
 
 function dayLabel(date: string, today: string) {
   if (date === today) return 'Today'
@@ -461,7 +462,9 @@ export function Today({
 
       {daySections.map((section) => {
         const g = namedSections.indexOf(section)
-        const isCollapsed = collapsed.includes(section.group)
+        // Tasks with no group get a "Tasks" heading so they don't look like part of Priorities
+        const collapseKey = section.group || UNGROUPED
+        const isCollapsed = collapsed.includes(collapseKey)
         const groupDone = section.tasks.reduce((sum, t) => sum + credit(stateOn(t, date, log)), 0)
         // All the group's tasks, not just today's, so its weekly bonus can count the whole week
         const groupMoney = money && dollars(tasks.filter((t) => groupOf(t) === section.group), plans, log, date, today)
@@ -473,35 +476,29 @@ export function Today({
         const shown = sequential && !reordering ? oneAtATime(section.tasks, date, log) : section.tasks
         return (
           <section key={section.group || '(none)'}>
-            {section.group && (
-              <div class="group-head">
-                <h2>
-                  <button
-                    class="group-toggle"
-                    aria-expanded={!isCollapsed}
-                    onClick={() => toggleCollapsed(section.group)}
-                  >
-                    <span class="chevron" aria-hidden="true">
-                      {isCollapsed ? '▸' : '▾'}
-                    </span>
-                    {section.group}
-                    <span class="group-count">
-                      {groupMoney
-                        ? `$${groupMoney.earned}/$${groupMoney.possible}`
-                        : `${groupDone}/${section.tasks.length}`}
-                    </span>
-                  </button>
-                </h2>
-                {reordering && (
-                  <MoveButtons
-                    label={`group ${section.group}`}
-                    first={g === 0}
-                    last={g === namedSections.length - 1}
-                    move={(step) => moveGroup(g, step)}
-                  />
-                )}
-              </div>
-            )}
+            <div class="group-head">
+              <h2>
+                <button class="group-toggle" aria-expanded={!isCollapsed} onClick={() => toggleCollapsed(collapseKey)}>
+                  <span class="chevron" aria-hidden="true">
+                    {isCollapsed ? '▸' : '▾'}
+                  </span>
+                  {section.group || 'Tasks'}
+                  <span class="group-count">
+                    {groupMoney
+                      ? `$${groupMoney.earned}/$${groupMoney.possible}`
+                      : `${groupDone}/${section.tasks.length}`}
+                  </span>
+                </button>
+              </h2>
+              {reordering && section.group && (
+                <MoveButtons
+                  label={`group ${section.group}`}
+                  first={g === 0}
+                  last={g === namedSections.length - 1}
+                  move={(step) => moveGroup(g, step)}
+                />
+              )}
+            </div>
             {dailyPlan && day && (
               <p class="week-bonus">
                 Day bonus ${dailyPlan.bonus} · {day.done} of {day.due} done
