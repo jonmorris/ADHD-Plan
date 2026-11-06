@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byCadence, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, oneAtATime, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
+import { addPeriod, byCadence, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, oneAtATime, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -277,5 +277,39 @@ describe('oneAtATime', () => {
   it('hides the revealed task again when the one before is undone', () => {
     expect(ids({ [day]: { a: 1, b: 0 } })).toEqual(['a', 'b'])
     expect(ids({ [day]: { a: 0, b: 1 } })).toEqual(['a', 'b'])
+  })
+})
+
+describe('periodic tasks', () => {
+  const shower = task({ kind: 'weekly', every: 2, days: [1] }, '2026-11-01', { id: 's', periodic: true })
+
+  it('shows every day from its start until done', () => {
+    expect(isDueOn(shower, '2026-11-01', {}, '2026-11-05')).toBe(true)
+    expect(isDueOn(shower, '2026-11-05', {}, '2026-11-05')).toBe(true)
+  })
+
+  it('stays on the day it was done, then hides until the period has passed', () => {
+    const log: Log = { '2026-11-03': { s: 1 } }
+    expect(isDueOn(shower, '2026-11-03', log, '2026-11-05')).toBe(true)
+    expect(isDueOn(shower, '2026-11-04', log, '2026-11-05')).toBe(false)
+    expect(isDueOn(shower, '2026-11-16', log, '2026-11-05')).toBe(false)
+    expect(isDueOn(shower, '2026-11-17', log, '2026-11-05')).toBe(true)
+    expect(isDueOn(shower, '2026-11-20', log, '2026-11-05')).toBe(true)
+  })
+
+  it('only a full done starts the wait, and it respects the end date', () => {
+    expect(isDueOn(shower, '2026-11-04', { '2026-11-03': { s: 0.5 } }, '2026-11-05')).toBe(true)
+    expect(isDueOn({ ...shower, end: '2026-11-10' }, '2026-11-11', {}, '2026-11-05')).toBe(false)
+  })
+
+  it('adds months and years, keeping to the end of shorter months', () => {
+    expect(addPeriod('2026-01-31', { kind: 'monthly', every: 1 })).toBe('2026-02-28')
+    expect(addPeriod('2026-11-06', { kind: 'yearly', every: 1 })).toBe('2027-11-06')
+    expect(addPeriod('2026-11-06', { kind: 'daily', every: 3 })).toBe('2026-11-09')
+  })
+
+  it('describes the gap rather than a schedule', () => {
+    expect(describeRepeat(shower.repeat, shower.start, undefined, true)).toBe('Once every 2 weeks')
+    expect(describeRepeat({ kind: 'monthly', every: 1 }, shower.start, undefined, true)).toBe('Once a month')
   })
 })

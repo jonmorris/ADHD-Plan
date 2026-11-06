@@ -107,6 +107,7 @@ export function Playbook({ pages, savePages, plans, savePlans, tracking, saveTra
       notes: task.notes,
       allowHalf: task.allowHalf,
       value: task.value,
+      periodic: task.periodic,
     }
     const before = plan.items.find((i) => i.id === item.id)
     const next = { ...plan, items: before ? plan.items.map((i) => (i.id === item.id ? item : i)) : [...plan.items, item] }
@@ -295,7 +296,7 @@ export function Playbook({ pages, savePages, plans, savePlans, tracking, saveTra
               <button class="plan-item" disabled={reordering} onClick={() => setEditingItem(item)}>
                 <span class="name">{item.title}</span>
                 <span class="detail">
-                  {describeRepeat(item.repeat, item.start, item.end)}
+                  {describeRepeat(item.repeat, item.start, item.end, item.periodic)}
                   {showDollars && ` · $${item.value ?? 1}`}
                 </span>
                 {item.notes && <span class="detail">{item.notes}</span>}
