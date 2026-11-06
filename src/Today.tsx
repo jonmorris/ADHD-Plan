@@ -19,7 +19,7 @@ import { dayProgress, dollars, valueOf, weekProgress, type Tracking } from './mo
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, type Plan } from './plans'
 import { MAX_PRIORITIES, togglePriority, type Priorities } from './priorities'
-import { remindersOn, toggleDismissed, type Dismissed, type Reminder } from './reminders'
+import { remindersOn, toggleDismissed, type Dismissed, type Reminder, type ReminderType } from './reminders'
 import { TaskForm } from './TaskForm'
 
 type Props = {
@@ -85,6 +85,34 @@ const RESTORE = (
 const REMINDERS = '\u0000reminders'
 const PRIORITIES = '\u0000priorities'
 const UNGROUPED = '\u0000ungrouped'
+
+// Icons shown in place of a checkbox for each type of reminder
+const REMINDER_ICONS: Record<ReminderType, preact.JSX.Element> = {
+  reminder: (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path
+        d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  ),
+  event: (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path
+        d="M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM3 10h18M8 3v4M16 3v4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  ),
+}
 
 function dayLabel(date: string, today: string) {
   if (date === today) return 'Today'
@@ -178,10 +206,11 @@ export function Today({
     setState(task, nextState(stateOn(task, date, log), !!task.allowHalf))
   }
 
-  function save(task: Task, asReminder: boolean) {
+  function save(task: Task, asReminder: boolean, reminderType: ReminderType) {
     if (asReminder) {
       const { id, title, notes, start, repeat, end } = task
-      const reminder: Reminder = { id, title, notes, start, repeat, end }
+      const type = reminderType === 'reminder' ? undefined : reminderType
+      const reminder: Reminder = { id, title, notes, start, repeat, end, type }
       const known = reminders.some((r) => r.id === id)
       saveReminders(known ? reminders.map((r) => (r.id === id ? reminder : r)) : [...reminders, reminder])
       return setEditing(undefined)
@@ -376,6 +405,7 @@ export function Today({
           <ul class="tasks">
             {dayReminders.active.map((r) => (
               <li key={r.id}>
+                <span class="reminder-icon">{REMINDER_ICONS[r.type ?? 'reminder']}</span>
                 <button
                   class="title"
                   onClick={() => {
@@ -402,6 +432,7 @@ export function Today({
               <ul class="tasks dismissed-reminders">
                 {dayReminders.dismissed.map((r) => (
                   <li key={r.id}>
+                    <span class="reminder-icon">{REMINDER_ICONS[r.type ?? 'reminder']}</span>
                     <span class="title">
                       <span class="name">{r.title}</span>
                       {r.notes && <span class="notes">{r.notes}</span>}
@@ -524,6 +555,7 @@ export function Today({
           groups={allGroups}
           isNew={!(editingReminder ? reminders : tasks).some((t) => t.id === editing.id)}
           isReminder={editingReminder}
+          reminderType={editingReminder ? reminders.find((r) => r.id === editing.id)?.type : undefined}
           canBeReminder={!editingReminder && !tasks.some((t) => t.id === editing.id)}
           onSave={save}
           onRemove={() => remove(editing)}
