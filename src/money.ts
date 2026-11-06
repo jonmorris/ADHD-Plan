@@ -16,7 +16,7 @@ export const valueOf = (task: Task) => task.value ?? 1
 // and the last day one is due (the day the weekly bonus counts on).
 export function weekProgress(plan: Plan, tasks: Task[], log: Log, key: string, today: string) {
   const sunday = addDays(key, -fromDateKey(key).getDay())
-  const weekly = tasks.filter((t) => t.plan === plan.id && t.repeat.kind === 'weekly')
+  const weekly = tasks.filter((t) => t.plan === plan.id && t.repeat.kind === 'weekly' && !t.periodic)
   let due = 0
   let done = 0
   let lastDay: string | undefined

@@ -1,4 +1,4 @@
-import { addDays, daysBetween, fromDateKey } from './dates'
+import { addDays, daysBetween, fromDateKey, toDateKey } from './dates'
 
 export type Repeat =
   | { kind: 'none' }
@@ -16,6 +16,7 @@ export type Task = {
   notes?: string
   allowHalf?: boolean // tap once for half done, twice for done
   value?: number // dollars earned when done (default 1, see money.ts)
+  periodic?: boolean // repeat is the gap after each completion, on any day, not a fixed schedule
   plan?: string // id of the plan that added it
   planItem?: string // id of the plan item it came from
   source?: string // name of the plan or Playbook page it came from
@@ -63,8 +64,12 @@ function schedule(r: Exclude<Repeat, { kind: 'none' }>, s: Date): string {
 }
 
 // Short description of a schedule, e.g. "Every 2 weeks on Mon, Thu until 31 Dec".
-export function describeRepeat(r: Repeat, start: string, end?: string): string {
+export function describeRepeat(r: Repeat, start: string, end?: string, periodic?: boolean): string {
   if (r.kind === 'none') return 'One-off'
+  if (periodic) {
+    const unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[r.kind]
+    return r.every === 1 ? `Once a ${unit}` : `Once every ${r.every} ${unit}s`
+  }
   const s = fromDateKey(start)
   if (!end) return schedule(r, s)
   const e = fromDateKey(end)
@@ -133,8 +138,33 @@ export function doneOn(task: Task, log: Log): string | undefined {
     .find((d) => log[d][task.id] === 1)
 }
 
+// The day a periodic task is due again after being done on `key`.
+export function addPeriod(key: string, r: Exclude<Repeat, { kind: 'none' }>): string {
+  const d = fromDateKey(key)
+  if (r.kind === 'daily') return addDays(key, r.every)
+  if (r.kind === 'weekly') return addDays(key, 7 * r.every)
+  const months = r.kind === 'monthly' ? r.every : 12 * r.every
+  const target = new Date(d.getFullYear(), d.getMonth() + months, 1)
+  target.setDate(Math.min(d.getDate(), daysInMonth(target)))
+  return toDateKey(target)
+}
+
+// The last day before `key` the task was fully done.
+function lastDoneBefore(task: Task, log: Log, key: string): string | undefined {
+  return Object.keys(log)
+    .filter((d) => d < key && log[d][task.id] === 1)
+    .sort()
+    .pop()
+}
+
 export function isDueOn(task: Task, key: string, log: Log, today: string): boolean {
   if (key < task.start || (task.removedOn && key >= task.removedOn)) return false
+  // Periodic tasks show every day from when they're due until done, then hide for the period
+  if (task.periodic && task.repeat.kind !== 'none') {
+    if (task.end && key > task.end) return false
+    const last = lastDoneBefore(task, log, key)
+    return !last || key >= addPeriod(last, task.repeat)
+  }
   if (task.repeat.kind !== 'none') return !(task.end && key > task.end) && occursOn(task.repeat, task.start, key)
   // One-off tasks carry over each day until done (a future one shows on its own date)
   const done = doneOn(task, log)

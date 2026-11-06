@@ -275,7 +275,7 @@ export function Today({
             {t.title}
           </span>
           <span class="repeat">
-            {describeRepeat(t.repeat, t.start, t.end)}
+            {describeRepeat(t.repeat, t.start, t.end, t.periodic)}
             {money && ` · $${valueOf(t)}`}
             {source && <span class="tag">{source}</span>}
           </span>

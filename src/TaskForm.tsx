@@ -28,6 +28,7 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
   const [start, setStart] = useState(task.start)
   const [end, setEnd] = useState(task.end ?? '')
   const [allowHalf, setAllowHalf] = useState(!!task.allowHalf)
+  const [periodic, setPeriodic] = useState(!!task.periodic)
   const [value, setValue] = useState(task.value ?? 1)
   const [group, setGroup] = useState(groupOf(task))
   const [newGroup, setNewGroup] = useState('')
@@ -48,6 +49,7 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
       start,
       repeat,
       end: kind !== 'none' && end ? end : undefined,
+      periodic: (kind !== 'none' && periodic && !reminder) || undefined,
       allowHalf: allowHalf || undefined,
       value: value === 1 ? undefined : value,
       ...(groups && { group: group === NEW_GROUP ? newGroup.trim() : group }),
@@ -115,7 +117,17 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
           </label>
         )}
 
-        {kind === 'weekly' && (
+        {kind !== 'none' && !reminder && (
+          <label class="check-field">
+            <input type="checkbox" checked={periodic} onChange={(e) => setPeriodic(e.currentTarget.checked)} />
+            <span>
+              Periodic
+              <small>Due again once this much time has passed since you last did it, on any day</small>
+            </span>
+          </label>
+        )}
+
+        {kind === 'weekly' && !(periodic && !reminder) && (
           <div class="weekdays" role="group" aria-label="On these days">
             {WEEKDAYS.map((label, day) => (
               <button
@@ -194,7 +206,7 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
           <button type="button" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" class="primary" disabled={kind === 'weekly' && days.length === 0}>
+          <button type="submit" class="primary" disabled={kind === 'weekly' && days.length === 0 && !(periodic && !reminder)}>
             Save
           </button>
         </div>
