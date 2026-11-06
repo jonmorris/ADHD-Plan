@@ -2,7 +2,13 @@
 // they are dismissed for the day instead. A one-off reminder only shows on its own date.
 import { occursOn, type Task } from './tasks'
 
-export type Reminder = Pick<Task, 'id' | 'title' | 'notes' | 'start' | 'repeat' | 'end' | 'removedOn'>
+// Kinds of reminder, each shown with its own icon. Add new ones here.
+export const REMINDER_TYPES = { reminder: 'Reminder', event: 'Event' } as const
+export type ReminderType = keyof typeof REMINDER_TYPES
+
+export type Reminder = Pick<Task, 'id' | 'title' | 'notes' | 'start' | 'repeat' | 'end' | 'removedOn'> & {
+  type?: ReminderType // default 'reminder'
+}
 
 // dismissed[date] = ids of the reminders dismissed that day
 export type Dismissed = Record<string, string[]>

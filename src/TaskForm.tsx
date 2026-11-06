@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks'
 import { fromDateKey } from './dates'
 import { groupOf } from './groups'
 import { VALUES } from './money'
+import { REMINDER_TYPES, type ReminderType } from './reminders'
 import type { Repeat, Task } from './tasks'
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -14,15 +15,17 @@ type Props = {
   isNew: boolean
   isReminder?: boolean // editing a reminder: title, notes and schedule only
   canBeReminder?: boolean // show the Task / Reminder switch (new items on Today)
-  onSave: (task: Task, asReminder: boolean) => void
+  reminderType?: ReminderType
+  onSave: (task: Task, asReminder: boolean, reminderType: ReminderType) => void
   onRemove: () => void
   onClose: () => void
 }
 
 const NEW_GROUP = '\u0000new'
 
-export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeReminder, onSave, onRemove, onClose }: Props) {
+export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeReminder, reminderType, onSave, onRemove, onClose }: Props) {
   const [reminder, setReminder] = useState(!!isReminder)
+  const [type, setType] = useState<ReminderType>(reminderType ?? 'reminder')
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
@@ -53,7 +56,7 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
       allowHalf: allowHalf || undefined,
       value: value === 1 ? undefined : value,
       ...(groups && { group: group === NEW_GROUP ? newGroup.trim() : group }),
-    }, reminder)
+    }, reminder, type)
   }
 
   function toggleDay(day: number) {
@@ -75,6 +78,17 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
               </button>
             ))}
           </div>
+        )}
+
+        {reminder && (
+          <label class="field">
+            Type
+            <select value={type} onChange={(e) => setType(e.currentTarget.value as ReminderType)}>
+              {Object.entries(REMINDER_TYPES).map(([value, label]) => (
+                <option value={value}>{label}</option>
+              ))}
+            </select>
+          </label>
         )}
 
         <label class="field">

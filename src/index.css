@@ -182,6 +182,20 @@ button.link {
   white-space: pre-line;
 }
 
+.reminder-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--accent);
+}
+
+.dismissed-reminders .reminder-icon {
+  color: var(--muted);
+}
+
 .reminders-empty {
   margin: 0.6rem 0;
   color: var(--muted);
