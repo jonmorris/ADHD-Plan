@@ -7,6 +7,7 @@
   --accent: #2f6fde;
   --on-accent: #ffffff;
   --danger: #c62828;
+  --highlight: #fff4cc; /* behind the Priorities group */
   /* Checkbox color per cadence (validated categorical palette, light steps) */
   --c-none: #2a78d6;
   --c-daily: #eb6834;
@@ -27,6 +28,7 @@
     --accent: #6b9cf0;
     --on-accent: #0b1a33;
     --danger: #ef6b6b;
+    --highlight: #2e2914;
     --c-none: #3987e5;
     --c-daily: #d95926;
     --c-weekly: #199e70;
@@ -371,6 +373,22 @@ button.link {
 }
 
 /* Groups */
+
+/* Priorities: the whole group sits on a highlight */
+.priorities {
+  margin-top: 1.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--highlight);
+}
+
+.priorities .group-head {
+  margin-top: 0;
+}
+
+.priorities .tasks li:last-child {
+  border-bottom: none;
+}
 
 .group-head {
   display: flex;
