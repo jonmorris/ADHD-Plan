@@ -6,13 +6,16 @@ import { summarize, type Log, type Task } from './tasks'
 
 const RANGES = [7, 30, 90]
 
-type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string }
+export type Theme = 'system' | 'light' | 'dark'
+const THEMES: Record<Theme, string> = { system: 'System', light: 'Light', dark: 'Dark' }
+
+type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string; theme: Theme; saveTheme: (theme: Theme) => void }
 
 function formatDay(key: string) {
   return fromDateKey(key).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-export function Analytics({ tasks, plans, log, today }: Props) {
+export function Analytics({ tasks, plans, log, today, theme, saveTheme }: Props) {
   const [days, setDays] = useState(7)
   const [selected, setSelected] = useState(today)
 
@@ -148,6 +151,17 @@ export function Analytics({ tasks, plans, log, today }: Props) {
             </tbody>
           </table>
         )}
+      </section>
+
+      <section>
+        <h2>Theme</h2>
+        <div class="ranges" role="group" aria-label="Theme">
+          {(Object.keys(THEMES) as Theme[]).map((t) => (
+            <button class={theme === t ? 'on' : ''} aria-pressed={theme === t} onClick={() => saveTheme(t)}>
+              {THEMES[t]}
+            </button>
+          ))}
+        </div>
       </section>
     </>
   )
