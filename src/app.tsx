@@ -75,6 +75,8 @@ export function App() {
             savePages={savePages}
             plans={plans}
             savePlans={savePlans}
+            order={order}
+            saveOrder={saveOrder}
             tracking={tracking}
             saveTracking={saveTracking}
             tasks={tasks} saveTasks={saveTasks} today={today} />
