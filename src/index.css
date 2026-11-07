@@ -380,10 +380,10 @@ button.link {
 /* Groups */
 
 /* Priorities: the whole group sits on a highlight */
+/* Runs edge to edge across main's side padding, so its items line up with the rest */
 .priorities {
-  margin-top: 1.25rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
+  margin: 1.25rem -1rem 0;
+  padding: 0.5rem 1rem;
   background: var(--highlight);
 }
 
