@@ -18,8 +18,9 @@
   font-family: system-ui, sans-serif;
 }
 
+/* Dark colors: follow the phone unless a theme is picked in Analytics (data-theme on <html>) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #121212;
     --surface: #1e1e20;
     --text: #eeeeee;
@@ -35,6 +36,28 @@
     --c-monthly: #c98500;
     --c-yearly: #d55181;
   }
+}
+
+:root[data-theme='dark'] {
+  --bg: #121212;
+  --surface: #1e1e20;
+  --text: #eeeeee;
+  --muted: #999999;
+  --border: #333333;
+  --accent: #6b9cf0;
+  --on-accent: #0b1a33;
+  --danger: #ef6b6b;
+  --highlight: #4a3c0c;
+  --c-none: #3987e5;
+  --c-daily: #d95926;
+  --c-weekly: #199e70;
+  --c-monthly: #c98500;
+  --c-yearly: #d55181;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 body {

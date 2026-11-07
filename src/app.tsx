@@ -1,5 +1,5 @@
-import { useState } from 'preact/hooks'
-import { Analytics } from './Analytics'
+import { useEffect, useState } from 'preact/hooks'
+import { Analytics, type Theme } from './Analytics'
 import { useBack } from './back'
 import { toDateKey } from './dates'
 import type { Tracking } from './money'
@@ -31,8 +31,13 @@ export function App() {
   const [reminders, saveReminders] = usePersisted<Reminder[]>('reminders', [])
   const [dismissed, saveDismissed] = usePersisted<Dismissed>('dismissed', {})
   const [priorities, savePriorities] = usePersisted<Priorities>('priorities', {})
+  const [theme, saveTheme] = usePersisted<Theme>('theme', 'system')
+  useEffect(() => {
+    if (theme === 'system' || !theme) delete document.documentElement.dataset.theme
+    else document.documentElement.dataset.theme = theme
+  }, [theme])
 
-  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme) return null
 
   function exportData() {
     const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, priorities, order, groupOrder }, null, 2)], { type: 'application/json' })
@@ -81,7 +86,7 @@ export function App() {
             saveTracking={saveTracking}
             tasks={tasks} saveTasks={saveTasks} today={today} />
         )}
-        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} />}
+        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} theme={theme} saveTheme={saveTheme} />}
         <button class="export" onClick={exportData}>
           Export backup
         </button>
