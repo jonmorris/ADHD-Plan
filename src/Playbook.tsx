@@ -22,6 +22,8 @@ type Props = {
   savePages: (pages: Page[]) => void
   plans: Plan[]
   savePlans: (plans: Plan[]) => void
+  order: string[]
+  saveOrder: (order: string[]) => void
   tracking: Tracking
   saveTracking: (tracking: Tracking) => void
   tasks: Task[]
@@ -29,7 +31,7 @@ type Props = {
   today: string
 }
 
-export function Playbook({ pages, savePages, plans, savePlans, tracking, saveTracking, tasks, saveTasks, today }: Props) {
+export function Playbook({ pages, savePages, plans, savePlans, order, saveOrder, tracking, saveTracking, tasks, saveTasks, today }: Props) {
   const showDollars = tracking === 'dollars'
   const [openId, setOpenId] = useState<string>()
   const [draft, setDraft] = useState<Page>()
@@ -127,6 +129,8 @@ export function Playbook({ pages, savePages, plans, savePlans, tracking, saveTra
     const items = [...plan.items]
     ;[items[index], items[index + step]] = [items[index + step], items[index]]
     savePlan({ ...plan, items })
+    // Today's saved order would otherwise keep showing the plan's tasks the old way
+    saveOrder(order.filter((id) => !tasks.some((t) => t.id === id && t.plan === plan.id)))
   }
 
   function save(e: Event) {
