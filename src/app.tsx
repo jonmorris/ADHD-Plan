@@ -6,7 +6,7 @@ import type { Tracking } from './money'
 import type { Page } from './notes'
 import { Playbook } from './Playbook'
 import { seedPlans, type Plan } from './plans'
-import type { Priorities } from './priorities'
+import type { DoNext, Focus, Priorities } from './priorities'
 import type { Dismissed, Reminder } from './reminders'
 import { usePersisted } from './store'
 import type { Log, Task } from './tasks'
@@ -31,16 +31,18 @@ export function App() {
   const [reminders, saveReminders] = usePersisted<Reminder[]>('reminders', [])
   const [dismissed, saveDismissed] = usePersisted<Dismissed>('dismissed', {})
   const [priorities, savePriorities] = usePersisted<Priorities>('priorities', {})
+  const [focus, saveFocus] = usePersisted<Focus>('focus', 'doNext')
+  const [doNext, saveDoNext] = usePersisted<DoNext>('doNext', {})
   const [theme, saveTheme] = usePersisted<Theme>('theme', 'system')
   useEffect(() => {
     if (theme === 'system' || !theme) delete document.documentElement.dataset.theme
     else document.documentElement.dataset.theme = theme
   }, [theme])
 
-  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme || !focus || !doNext) return null
 
   function exportData() {
-    const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, priorities, order, groupOrder }, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, priorities, doNext, order, groupOrder }, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `adhd-plan-${today}.json`
@@ -59,6 +61,8 @@ export function App() {
             reminders={reminders}
             dismissed={dismissed}
             priorities={priorities}
+            focus={focus}
+            doNext={doNext}
             log={log}
             order={order}
             groupOrder={groupOrder}
@@ -72,6 +76,7 @@ export function App() {
             saveReminders={saveReminders}
             saveDismissed={saveDismissed}
             savePriorities={savePriorities}
+            saveDoNext={saveDoNext}
           />
         )}
         {tab === 'playbook' && (
@@ -86,7 +91,7 @@ export function App() {
             saveTracking={saveTracking}
             tasks={tasks} saveTasks={saveTasks} today={today} />
         )}
-        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} theme={theme} saveTheme={saveTheme} />}
+        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} theme={theme} saveTheme={saveTheme} focus={focus} saveFocus={saveFocus} />}
         <button class="export" onClick={exportData}>
           Export backup
         </button>
