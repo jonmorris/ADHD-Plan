@@ -18,7 +18,7 @@ import {
 import { dayProgress, dollars, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, type Plan } from './plans'
-import { MAX_PRIORITIES, togglePriority, type Priorities } from './priorities'
+import { MAX_PRIORITIES, toggleDoNext, togglePriority, type DoNext, type Focus, type Priorities } from './priorities'
 import { remindersOn, toggleDismissed, type Dismissed, type Reminder, type ReminderType } from './reminders'
 import { TaskForm } from './TaskForm'
 
@@ -29,6 +29,8 @@ type Props = {
   reminders: Reminder[]
   dismissed: Dismissed
   priorities: Priorities
+  focus: Focus
+  doNext: DoNext
   log: Log
   order: string[]
   groupOrder: string[]
@@ -42,6 +44,7 @@ type Props = {
   saveReminders: (reminders: Reminder[]) => void
   saveDismissed: (dismissed: Dismissed) => void
   savePriorities: (priorities: Priorities) => void
+  saveDoNext: (doNext: DoNext) => void
 }
 
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
@@ -141,6 +144,8 @@ export function Today({
   reminders,
   dismissed,
   priorities,
+  focus,
+  doNext,
   log,
   order,
   groupOrder,
@@ -154,6 +159,7 @@ export function Today({
   saveReminders,
   saveDismissed,
   savePriorities,
+  saveDoNext,
 }: Props) {
   const [date, setDate] = useState(today)
   const [editing, setEditing] = useState<Task>()
@@ -175,7 +181,10 @@ export function Today({
   const dayReminders = remindersOn(reminders, dismissed, date)
   const remindersCollapsed = collapsed.includes(REMINDERS)
   const dayPriorities = priorities[date] ?? []
-  const priorityTasks = dayPriorities.flatMap((id) => due.filter((t) => t.id === id))
+  // The focus list: up to three priorities, or (by default) a single task to do next
+  const top3 = focus === 'top3'
+  const focusIds = top3 ? dayPriorities : doNext[date] ? [doNext[date]] : []
+  const focusTasks = focusIds.flatMap((id) => due.filter((t) => t.id === id))
   const prioritiesCollapsed = collapsed.includes(PRIORITIES)
   const [priorityNote, setPriorityNote] = useState('')
 
@@ -195,13 +204,14 @@ export function Today({
     }, 500)
   }
 
-  // Press and hold a task's name to make it one of the day's priorities; hold again to drop it.
+  // Press and hold a task's name to put it in the focus list (do next, or a priority); hold again to drop it.
   const titleHeld = useRef(false)
 
   function startPriorityHold(task: Task) {
     titleHeld.current = false
     holdTimer.current = window.setTimeout(() => {
       titleHeld.current = true
+      if (!top3) return saveDoNext(toggleDoNext(doNext, date, task.id))
       const next = togglePriority(priorities, date, task.id)
       if (next) return savePriorities(next)
       setPriorityNote(`You already have ${MAX_PRIORITIES} priorities. Hold one to remove it first.`)
@@ -281,7 +291,7 @@ export function Today({
 
   // Priorities are reordered within the day's priority list, not in the home groups
   function movePriority(index: number, step: -1 | 1) {
-    const ids = swap(dayPriorities, priorityTasks[index].id, priorityTasks[index + step].id)
+    const ids = swap(dayPriorities, focusTasks[index].id, focusTasks[index + step].id)
     savePriorities({ ...priorities, [date]: ids })
   }
 
@@ -316,7 +326,7 @@ export function Today({
           onContextMenu={(e) => e.preventDefault()}
         >
           <span class="name">
-            {home && dayPriorities.includes(t.id) && (
+            {home && focusIds.includes(t.id) && (
               <span class="star" aria-label="Priority">
                 ★{' '}
               </span>
@@ -335,7 +345,7 @@ export function Today({
             {DEFER}
           </button>
         )}
-        {reordering && (
+        {reordering && (home || top3) && (
           <MoveButtons
             label={t.title}
             first={i === 0}
@@ -482,10 +492,12 @@ export function Today({
               <span class="chevron" aria-hidden="true">
                 {prioritiesCollapsed ? '▸' : '▾'}
               </span>
-              Priorities
-              <span class="group-count">
-                {priorityTasks.length}/{MAX_PRIORITIES}
-              </span>
+              {top3 ? 'Priorities' : 'Do next'}
+              {top3 && (
+                <span class="group-count">
+                  {focusTasks.length}/{MAX_PRIORITIES}
+                </span>
+              )}
             </button>
           </h2>
         </div>
@@ -495,8 +507,12 @@ export function Today({
               {priorityNote}
             </p>
           )}
-          {priorityTasks.length === 0 && <p class="reminders-empty">Press and hold a task to make it a priority.</p>}
-          <ul class="tasks">{priorityTasks.map((t, i) => taskRow(t, i, priorityTasks, false))}</ul>
+          {focusTasks.length === 0 && (
+            <p class="reminders-empty">
+              {top3 ? 'Press and hold a task to make it a priority.' : 'Press and hold a task to do it next.'}
+            </p>
+          )}
+          <ul class="tasks">{focusTasks.map((t, i) => taskRow(t, i, focusTasks, false))}</ul>
         </div>
       </section>
 

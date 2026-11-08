@@ -2,20 +2,22 @@ import { useState } from 'preact/hooks'
 import { fromDateKey } from './dates'
 import { dollars, weekProgress } from './money'
 import type { Plan } from './plans'
+import type { Focus } from './priorities'
 import { summarize, type Log, type Task } from './tasks'
 
 const RANGES = [7, 30, 90]
 
 export type Theme = 'system' | 'light' | 'dark'
 const THEMES: Record<Theme, string> = { system: 'System', light: 'Light', dark: 'Dark' }
+const FOCUS: Record<Focus, string> = { doNext: 'Do next', top3: 'Top 3 priorities' }
 
-type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string; theme: Theme; saveTheme: (theme: Theme) => void }
+type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string; theme: Theme; saveTheme: (theme: Theme) => void; focus: Focus; saveFocus: (focus: Focus) => void }
 
 function formatDay(key: string) {
   return fromDateKey(key).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-export function Analytics({ tasks, plans, log, today, theme, saveTheme }: Props) {
+export function Analytics({ tasks, plans, log, today, theme, saveTheme, focus, saveFocus }: Props) {
   const [days, setDays] = useState(7)
   const [selected, setSelected] = useState(today)
 
@@ -151,6 +153,17 @@ export function Analytics({ tasks, plans, log, today, theme, saveTheme }: Props)
             </tbody>
           </table>
         )}
+      </section>
+
+      <section>
+        <h2>Focus</h2>
+        <div class="ranges" role="group" aria-label="Focus">
+          {(Object.keys(FOCUS) as Focus[]).map((f) => (
+            <button class={focus === f ? 'on' : ''} aria-pressed={focus === f} onClick={() => saveFocus(f)}>
+              {FOCUS[f]}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section>
