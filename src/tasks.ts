@@ -28,8 +28,12 @@ export type Task = {
 // 0 = not done, 0.5 = half done, 1 = done, -1 = marked as not done (✗)
 export type State = -1 | 0 | 0.5 | 1
 
-// log[date][taskId] = state that day. Nothing is ever deleted from it.
-export type Log = Record<string, Record<string, State>>
+// A task dismissed for the day (in a dismissable plan): it leaves that day's list
+// and counts as neither done nor not done.
+export const DISMISSED = -2
+
+// log[date][taskId] = state that day.
+export type Log = Record<string, Record<string, State | typeof DISMISSED>>
 
 export function nextState(s: State, allowHalf: boolean): State {
   if (!allowHalf) return s === 1 ? 0 : 1
@@ -159,6 +163,7 @@ function lastDoneBefore(task: Task, log: Log, key: string): string | undefined {
 
 export function isDueOn(task: Task, key: string, log: Log, today: string): boolean {
   if (key < task.start || (task.removedOn && key >= task.removedOn)) return false
+  if (log[key]?.[task.id] === DISMISSED) return false
   // Periodic tasks show every day from when they're due until done, then hide for the period
   if (task.periodic && task.repeat.kind !== 'none') {
     if (task.end && key > task.end) return false
@@ -172,15 +177,18 @@ export function isDueOn(task: Task, key: string, log: Log, today: string): boole
 }
 
 export function stateOn(task: Task, key: string, log: Log): State {
-  if (task.repeat.kind !== 'none') return log[key]?.[task.id] ?? 0
+  if (task.repeat.kind !== 'none') {
+    const s = log[key]?.[task.id]
+    return s === undefined || s === DISMISSED ? 0 : s
+  }
   // One-off tasks keep their latest state (e.g. half done) on later days
   const latest = Object.keys(log)
-    .filter((d) => d <= key && log[d][task.id] !== undefined)
+    .filter((d) => d <= key && log[d][task.id] !== undefined && log[d][task.id] !== DISMISSED)
     .sort()
     .pop()
   if (!latest) return 0
   // ✗ only applies to the day it was given
-  const state = log[latest][task.id]
+  const state = log[latest][task.id] as State
   return state === -1 && latest !== key ? 0 : state
 }
 
