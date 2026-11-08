@@ -244,13 +244,6 @@ button.link {
   color: var(--accent);
 }
 
-.reminders-sub {
-  margin: 0.75rem 0 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--muted);
-}
-
 .dismissed-reminders .name,
 .dismissed-reminders .notes {
   color: var(--muted);

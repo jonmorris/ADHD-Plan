@@ -4,6 +4,7 @@ import { addDays, fromDateKey, weekNumber } from './dates'
 import { groupOf, sections, sortGroups, sourceOf } from './groups'
 import {
   credit,
+  DISMISSED,
   dayStats,
   describeRepeat,
   isDueOn,
@@ -165,6 +166,7 @@ export function Today({
   const [editing, setEditing] = useState<Task>()
   const [editingReminder, setEditingReminder] = useState(false)
   const [reordering, setReordering] = useState(false)
+  const [trayOpen, setTrayOpen] = useState(false)
   useBack(!!editing, () => setEditing(undefined))
 
   const sorted = sortTasks(tasks, order, itemIndex(plans))
@@ -243,6 +245,19 @@ export function Today({
     // New tasks go to the top of their list
     if (!exists) saveOrder([task.id, ...order])
     setEditing(undefined)
+  }
+
+  // Dismissing takes a task off the day's list without counting it either way (see DISMISSED)
+  const dismissable = (task: Task) => plans.some((p) => p.dismissable && p.title === groupOf(task))
+  const dismissedTasks = sorted.filter((t) => log[date]?.[t.id] === DISMISSED)
+
+  function dismissTask(task: Task) {
+    saveLog({ ...log, [date]: { ...log[date], [task.id]: DISMISSED } })
+  }
+
+  function restoreTask(task: Task) {
+    const { [task.id]: _, ...rest } = log[date] ?? {}
+    saveLog({ ...log, [date]: rest })
   }
 
   // Moves a one-off task to the day after the one shown
@@ -343,6 +358,11 @@ export function Today({
         {!reordering && t.repeat.kind === 'none' && date >= today && state !== 1 && (
           <button class="defer" aria-label={`Defer ${t.title} to the next day`} onClick={() => defer(t)}>
             {DEFER}
+          </button>
+        )}
+        {!reordering && dismissable(t) && (
+          <button class="defer" aria-label={`Dismiss ${t.title}`} onClick={() => dismissTask(t)}>
+            {CLOSE}
           </button>
         )}
         {reordering && (home || top3) && (
@@ -455,29 +475,6 @@ export function Today({
               </li>
             ))}
           </ul>
-          {dayReminders.dismissed.length > 0 && (
-            <>
-              <h3 class="reminders-sub">Dismissed</h3>
-              <ul class="tasks dismissed-reminders">
-                {dayReminders.dismissed.map((r) => (
-                  <li key={r.id}>
-                    <span class="reminder-icon">{REMINDER_ICONS[r.type ?? 'reminder']}</span>
-                    <span class="title">
-                      <span class="name">{r.title}</span>
-                      {r.notes && <span class="notes">{r.notes}</span>}
-                    </span>
-                    <button
-                      class="defer"
-                      aria-label={`Restore ${r.title}`}
-                      onClick={() => saveDismissed(toggleDismissed(dismissed, date, r.id))}
-                    >
-                      {RESTORE}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
         </div>
       </section>
 
@@ -575,6 +572,51 @@ export function Today({
           </section>
         )
       })}
+
+      {dismissedTasks.length + dayReminders.dismissed.length > 0 && (
+        <section class="tray">
+          <div class="group-head">
+            <h2>
+              <button class="group-toggle" aria-expanded={trayOpen} onClick={() => setTrayOpen(!trayOpen)}>
+                <span class="chevron" aria-hidden="true">
+                  {trayOpen ? '▾' : '▸'}
+                </span>
+                Dismissed
+                <span class="group-count">{dismissedTasks.length + dayReminders.dismissed.length}</span>
+              </button>
+            </h2>
+          </div>
+          <ul class="tasks dismissed-reminders" hidden={!trayOpen}>
+            {dayReminders.dismissed.map((r) => (
+              <li key={r.id}>
+                <span class="reminder-icon">{REMINDER_ICONS[r.type ?? 'reminder']}</span>
+                <span class="title">
+                  <span class="name">{r.title}</span>
+                  {r.notes && <span class="notes">{r.notes}</span>}
+                </span>
+                <button
+                  class="defer"
+                  aria-label={`Restore ${r.title}`}
+                  onClick={() => saveDismissed(toggleDismissed(dismissed, date, r.id))}
+                >
+                  {RESTORE}
+                </button>
+              </li>
+            ))}
+            {dismissedTasks.map((t) => (
+              <li key={t.id}>
+                <span class="title">
+                  <span class="name">{t.title}</span>
+                  <span class="notes">{groupOf(t)}</span>
+                </span>
+                <button class="defer" aria-label={`Restore ${t.title}`} onClick={() => restoreTask(t)}>
+                  {RESTORE}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {due.length > 0 && !future && <p class="hint">Press and hold a box to mark it ✕ (didn't do it).</p>}
 

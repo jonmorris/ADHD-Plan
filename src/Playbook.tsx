@@ -208,6 +208,17 @@ export function Playbook({ pages, savePages, plans, savePlans, order, saveOrder,
             <small>Show its tasks on Today one at a time, in order. The next appears once you tick or ✕ the one before.</small>
           </span>
         </label>
+        <label class="check-field">
+          <input
+            type="checkbox"
+            checked={!!planDraft.dismissable}
+            onChange={(e) => setPlanDraft({ ...planDraft, dismissable: e.currentTarget.checked || undefined })}
+          />
+          <span>
+            Dismissable
+            <small>Each task gets a ✕ on Today to take it off the list for the day. Dismissed tasks don't count as done or not done.</small>
+          </span>
+        </label>
         {showDollars && (
           <>
             <label class="field">

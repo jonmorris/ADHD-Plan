@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addPeriod, byCadence, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, oneAtATime, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
+import { addPeriod, byCadence, DISMISSED, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, oneAtATime, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -311,5 +311,24 @@ describe('periodic tasks', () => {
   it('describes the gap rather than a schedule', () => {
     expect(describeRepeat(shower.repeat, shower.start, undefined, true)).toBe('Once every 2 weeks')
     expect(describeRepeat({ kind: 'monthly', every: 1 }, shower.start, undefined, true)).toBe('Once a month')
+  })
+})
+
+describe('dismissed tasks', () => {
+  const day = '2026-11-08'
+  const laundry = task({ kind: 'daily', every: 1 }, '2026-11-01', { id: 'l' })
+  const beds = task({ kind: 'daily', every: 1 }, '2026-11-01', { id: 'b' })
+  const log: Log = { [day]: { l: DISMISSED, b: 1 } }
+
+  it('are off that day only and count as neither done nor not done', () => {
+    expect(isDueOn(laundry, day, log, day)).toBe(false)
+    expect(isDueOn(laundry, '2026-11-09', log, '2026-11-09')).toBe(true)
+    expect(dayStats([laundry, beds], log, day, day)).toEqual({ due: 1, done: 1 })
+    expect(stateOn(laundry, day, log)).toBe(0)
+  })
+
+  it("don't break a streak", () => {
+    const streakLog: Log = { '2026-11-06': { l: 1 }, '2026-11-07': { l: DISMISSED }, [day]: { l: 1 } }
+    expect(streak(laundry, streakLog, day)).toBe(2)
   })
 })
