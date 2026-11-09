@@ -254,6 +254,17 @@ button.link {
   padding: 0.75rem 0;
 }
 
+.cleanup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  color: var(--accent);
+}
+
 .defer {
   display: flex;
   align-items: center;

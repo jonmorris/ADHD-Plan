@@ -85,6 +85,20 @@ const RESTORE = (
   </svg>
 )
 
+// Broom, for clearing done tasks out of the focus list
+const SWEEP = (
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <path
+      d="M19 3l-7 7M9 9l6 6M9 9c-3 1-5 3-6 7l2 1 1-2 1 2 2-1 1-2 1 2 3-1c1-3 0-5-1-6"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+)
+
 // Keys in `collapsed` for the reminders, priorities and ungrouped sections (can't clash with a group name)
 const REMINDERS = '\u0000reminders'
 const PRIORITIES = '\u0000priorities'
@@ -304,6 +318,16 @@ export function Today({
     setEditing({ id: crypto.randomUUID(), title: '', start: date, repeat: { kind: 'none' } })
   }
 
+  // Takes the done tasks out of the focus list; they stay done in their home groups
+  const focusDone = focusTasks.filter((t) => stateOn(t, date, log) === 1)
+  function clearDone() {
+    const done = focusDone.map((t) => t.id)
+    if (top3) return savePriorities({ ...priorities, [date]: dayPriorities.filter((id) => !done.includes(id)) })
+    const next = { ...doNext }
+    delete next[date]
+    saveDoNext(next)
+  }
+
   // Priorities are reordered within the day's priority list, not in the home groups
   function movePriority(index: number, step: -1 | 1) {
     const ids = swap(dayPriorities, focusTasks[index].id, focusTasks[index + step].id)
@@ -497,6 +521,11 @@ export function Today({
               )}
             </button>
           </h2>
+          {focusDone.length > 0 && (
+            <button class="cleanup" aria-label="Clear done tasks" title="Clear done tasks" onClick={clearDone}>
+              {SWEEP}
+            </button>
+          )}
         </div>
         <div hidden={prioritiesCollapsed}>
           {priorityNote && (
