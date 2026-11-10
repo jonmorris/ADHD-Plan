@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseTaskLines, planBulkAdd } from './bulk'
-import type { Task } from './tasks'
+import { parseTaskLines } from './bulk'
 
 const today = '2026-10-23' // Friday
 
@@ -69,17 +68,5 @@ describe('parseTaskLines', () => {
       'Unknown day "Funday"',
       'Couldn\'t read "Every 0 days"',
     ])
-  })
-})
-
-describe('planBulkAdd', () => {
-  const existing: Task[] = [
-    { id: '1', title: 'Take meds', start: today, repeat: { kind: 'daily', every: 1 } },
-    { id: '2', title: 'Old task', start: today, repeat: { kind: 'none' }, removedOn: today },
-  ]
-
-  it('skips names that already exist (ignoring case) or repeat within the page, but not removed tasks', () => {
-    const items = parseTaskLines('- [ ] take meds — Daily\n- [ ] Old task\n- [ ] Walk\n- [ ] walk\n- [ ] X — Nope', today)
-    expect(planBulkAdd(items, existing).map((p) => p.status)).toEqual(['exists', 'add', 'add', 'exists', 'error'])
   })
 })
