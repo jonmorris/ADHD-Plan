@@ -234,16 +234,22 @@ export function Playbook({ pages, savePages, plans, savePlans, order, saveOrder,
             </label>
             <label class="field">
               Weekly bonus: all its weekly tasks done that week
-              <select
-                value={planDraft.weeklyBonus ?? 0}
-                onChange={(e) =>
-                  setPlanDraft({ ...planDraft, weeklyBonus: Number(e.currentTarget.value) || undefined })
-                }
-              >
-                {BONUSES.map((v) => (
-                  <option value={v}>${v}</option>
-                ))}
-              </select>
+              <span class="money-input">
+                $
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={planDraft.weeklyBonus ?? 0}
+                  onInput={(e) =>
+                    setPlanDraft({
+                      ...planDraft,
+                      weeklyBonus: Math.max(0, Math.round(Number(e.currentTarget.value))) || undefined,
+                    })
+                  }
+                />
+              </span>
             </label>
           </>
         )}

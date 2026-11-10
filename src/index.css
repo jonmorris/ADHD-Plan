@@ -598,6 +598,17 @@ button.link {
   gap: 0.5rem;
 }
 
+/* A dollar amount: "$" then a short number box */
+.money-input {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.money-input input {
+  width: 6rem;
+}
+
 .end-row input {
   flex: 1;
 }
