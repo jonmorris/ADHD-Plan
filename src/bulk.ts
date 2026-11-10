@@ -121,21 +121,3 @@ export function parseTaskLines(body: string, today: string): ParsedLine[] {
   }
   return items
 }
-
-export type Planned = { text: string } & (
-  | { status: 'add'; task: Draft }
-  | { status: 'exists' }
-  | { status: 'error'; error: string }
-)
-
-// Decide which parsed lines to add, skipping names that already exist.
-export function planBulkAdd(items: ParsedLine[], tasks: Task[]): Planned[] {
-  const seen = new Set(tasks.filter((t) => !t.removedOn).map((t) => t.title.trim().toLowerCase()))
-  return items.map((item) => {
-    if ('error' in item) return { text: item.text, status: 'error', error: item.error }
-    const key = item.task.title.toLowerCase()
-    if (seen.has(key)) return { text: item.text, status: 'exists' }
-    seen.add(key)
-    return { text: item.text, status: 'add', task: item.task }
-  })
-}

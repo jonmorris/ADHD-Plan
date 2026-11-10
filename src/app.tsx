@@ -3,7 +3,6 @@ import { Analytics, type Theme } from './Analytics'
 import { useBack } from './back'
 import { toDateKey } from './dates'
 import type { Tracking } from './money'
-import type { Page } from './notes'
 import { Playbook } from './Playbook'
 import { seedPlans, type Plan } from './plans'
 import type { DoNext, Focus, Priorities } from './priorities'
@@ -20,7 +19,8 @@ export function App() {
   useBack(tab !== 'today', () => setTab('today'))
   const [tasks, saveTasks] = usePersisted<Task[]>('tasks', [])
   const [log, saveLog] = usePersisted<Log>('log', {})
-  const [pages, savePages] = usePersisted<Page[]>('pages', [])
+  // Notes pages from before Playbook pages were removed; kept so they stay in the backup
+  const [pages] = usePersisted<unknown[]>('pages', [])
   const [order, saveOrder] = usePersisted<string[]>('order', [])
   const [groupOrder, saveGroupOrder] = usePersisted<string[]>('groupOrder', [])
   const [collapsed, saveCollapsed] = usePersisted<string[]>('collapsed', [])
@@ -81,8 +81,6 @@ export function App() {
         )}
         {tab === 'playbook' && (
           <Playbook
-            pages={pages}
-            savePages={savePages}
             plans={plans}
             savePlans={savePlans}
             order={order}

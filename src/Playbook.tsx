@@ -1,9 +1,7 @@
 import { useState } from 'preact/hooks'
 import { useBack } from './back'
-import { BulkAdd } from './BulkAdd'
 import { BONUSES, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
-import { parseNote, type Page } from './notes'
 import {
   disablePlan,
   enablePlan,
@@ -18,8 +16,6 @@ import { TaskForm } from './TaskForm'
 import { describeRepeat, type Task } from './tasks'
 
 type Props = {
-  pages: Page[]
-  savePages: (pages: Page[]) => void
   plans: Plan[]
   savePlans: (plans: Plan[]) => void
   order: string[]
@@ -31,23 +27,18 @@ type Props = {
   today: string
 }
 
-export function Playbook({ pages, savePages, plans, savePlans, order, saveOrder, tracking, saveTracking, tasks, saveTasks, today }: Props) {
+export function Playbook({ plans, savePlans, order, saveOrder, tracking, saveTracking, tasks, saveTasks, today }: Props) {
   const showDollars = tracking === 'dollars'
-  const [openId, setOpenId] = useState<string>()
-  const [draft, setDraft] = useState<Page>()
   const [openPlanId, setOpenPlanId] = useState<string>()
   const [planDraft, setPlanDraft] = useState<Plan>()
   const [editingItem, setEditingItem] = useState<PlanItem>()
   const [reordering, setReordering] = useState(false)
 
-  const open = pages.find((p) => p.id === openId)
   const openPlan = plans.find((p) => p.id === openPlanId)
-  useBack(!!open, () => setOpenId(undefined))
   useBack(!!openPlan, () => {
     setOpenPlanId(undefined)
     setReordering(false)
   })
-  useBack(!!draft, () => setDraft(undefined))
   useBack(!!planDraft, () => setPlanDraft(undefined))
   useBack(!!editingItem, () => setEditingItem(undefined))
   // Items on a switched-on plan that aren't on the list (enablePlan skips ones already there or removed)
@@ -131,51 +122,6 @@ export function Playbook({ pages, savePages, plans, savePlans, order, saveOrder,
     savePlan({ ...plan, items })
     // Today's saved order would otherwise keep showing the plan's tasks the old way
     saveOrder(order.filter((id) => !tasks.some((t) => t.id === id && t.plan === plan.id)))
-  }
-
-  function save(e: Event) {
-    e.preventDefault()
-    const page = { ...draft!, title: draft!.title.trim() }
-    const exists = pages.some((p) => p.id === page.id)
-    savePages(exists ? pages.map((p) => (p.id === page.id ? page : p)) : [...pages, page])
-    setOpenId(page.id)
-    setDraft(undefined)
-  }
-
-  function remove(page: Page) {
-    if (!confirm(`Delete "${page.title}"?`)) return
-    savePages(pages.filter((p) => p.id !== page.id))
-    setOpenId(undefined)
-  }
-
-  if (draft) {
-    return (
-      <form class="page-edit" onSubmit={save}>
-        <input
-          class="page-title"
-          value={draft.title}
-          onInput={(e) => setDraft({ ...draft, title: e.currentTarget.value })}
-          placeholder="Page title"
-          aria-label="Page title"
-          required
-        />
-        <textarea
-          value={draft.body}
-          onInput={(e) => setDraft({ ...draft, body: e.currentTarget.value })}
-          placeholder={'Write anything.\n\n# Heading\n- List item\n- [ ] A task to add — Daily'}
-          aria-label="Page text"
-          rows={16}
-        />
-        <div class="actions">
-          <button type="button" onClick={() => setDraft(undefined)}>
-            Cancel
-          </button>
-          <button type="submit" class="primary">
-            Save
-          </button>
-        </div>
-      </form>
-    )
   }
 
   if (planDraft) {
@@ -363,35 +309,6 @@ export function Playbook({ pages, savePages, plans, savePlans, order, saveOrder,
     )
   }
 
-  if (open) {
-    return (
-      <article class="page">
-        <div class="page-bar">
-          <button onClick={() => setOpenId(undefined)}>‹ Playbook</button>
-          <button onClick={() => setDraft(open)}>Edit</button>
-        </div>
-        <h1>{open.title}</h1>
-        {parseNote(open.body).map((b) =>
-          b.type === 'heading' ? (
-            b.level === 1 ? <h2>{b.text}</h2> : <h3>{b.text}</h3>
-          ) : b.type === 'list' ? (
-            <ul>
-              {b.items.map((item) => (
-                <li>{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>{b.text}</p>
-          ),
-        )}
-        <BulkAdd title={open.title} body={open.body} tasks={tasks} today={today} saveTasks={saveTasks} />
-        <button class="danger" onClick={() => remove(open)}>
-          Delete page
-        </button>
-      </article>
-    )
-  }
-
   return (
     <>
       <h1>Playbook</h1>
@@ -426,18 +343,6 @@ export function Playbook({ pages, savePages, plans, savePlans, order, saveOrder,
         + New plan
       </button>
 
-      <h2>Your pages</h2>
-      {pages.length === 0 && <p class="empty">Write down what works for you, so it's here when you need it.</p>}
-      <ul class="pages">
-        {pages.map((p) => (
-          <li key={p.id}>
-            <button onClick={() => setOpenId(p.id)}>{p.title}</button>
-          </li>
-        ))}
-      </ul>
-      <button class="primary add" onClick={() => setDraft({ id: crypto.randomUUID(), title: '', body: '' })}>
-        + New page
-      </button>
     </>
   )
 }
