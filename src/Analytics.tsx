@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks'
 import { fromDateKey } from './dates'
-import { dollars, weekProgress } from './money'
+import { allTimeEarned, balance, dollars, weekProgress, type CashOut } from './money'
 import type { Plan } from './plans'
 import type { Focus } from './priorities'
 import { summarize, type Log, type Task } from './tasks'
@@ -11,13 +11,13 @@ export type Theme = 'system' | 'light' | 'dark'
 const THEMES: Record<Theme, string> = { system: 'System', light: 'Light', dark: 'Dark' }
 const FOCUS: Record<Focus, string> = { doNext: 'Do next', top3: 'Top 3 priorities' }
 
-type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string; theme: Theme; saveTheme: (theme: Theme) => void; focus: Focus; saveFocus: (focus: Focus) => void }
+type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string; cashOuts: CashOut[]; saveCashOuts: (cashOuts: CashOut[]) => void; theme: Theme; saveTheme: (theme: Theme) => void; focus: Focus; saveFocus: (focus: Focus) => void }
 
 function formatDay(key: string) {
   return fromDateKey(key).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-export function Analytics({ tasks, plans, log, today, theme, saveTheme, focus, saveFocus }: Props) {
+export function Analytics({ tasks, plans, log, today, cashOuts, saveCashOuts, theme, saveTheme, focus, saveFocus }: Props) {
   const [days, setDays] = useState(7)
   const [selected, setSelected] = useState(today)
 
@@ -31,6 +31,14 @@ export function Analytics({ tasks, plans, log, today, theme, saveTheme, focus, s
   const totalEarned = perDayMoney.reduce((sum, m) => sum + m.earned, 0)
   const totalBonuses = perDayMoney.reduce((sum, m) => sum + m.bonusEarned, 0)
   const readoutMoney = moneyOn(readout.date)
+  const earnedAllTime = allTimeEarned(tasks, plans, log, today)
+  const cash = balance(earnedAllTime, cashOuts)
+
+  function cashOut() {
+    if (!confirm(`Cash out $${cash}? The balance goes back to $0.`)) return
+    saveCashOuts([...cashOuts, { date: today, amount: cash }])
+  }
+
   const weeklyBonuses = plans.flatMap((plan) => {
     const week = plan.weeklyBonus ? weekProgress(plan, tasks, log, today, today) : undefined
     return week ? [{ plan, week }] : []
@@ -70,6 +78,33 @@ export function Analytics({ tasks, plans, log, today, theme, saveTheme, focus, s
           <span class="value">${totalBonuses}</span>
         </div>
       </div>
+
+      <section>
+        <h2>Cash</h2>
+        <div class="stats">
+          <div class="stat">
+            <span class="label">Balance</span>
+            <span class="value">${cash}</span>
+          </div>
+          <div class="stat">
+            <span class="label">Earned all time</span>
+            <span class="value">${earnedAllTime}</span>
+          </div>
+        </div>
+        <button class="primary cash-out" disabled={cash <= 0} onClick={cashOut}>
+          Cash out ${Math.max(cash, 0)}
+        </button>
+        {cashOuts.length > 0 && (
+          <ul class="cash-outs">
+            {[...cashOuts].reverse().map((c) => (
+              <li>
+                <span>{formatDay(c.date)}</span>
+                <span>${c.amount}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section>
         <h2>Done per day</h2>
