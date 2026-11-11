@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dollars, weekProgress } from './money'
+import { allTimeEarned, balance, dollars, weekProgress } from './money'
 import type { Plan } from './plans'
 import type { Log, Task } from './tasks'
 
@@ -79,5 +79,20 @@ describe('weekly bonus', () => {
   it('keeps weekly tasks out of the daily bonus', () => {
     expect(dollars(lifts, [plan(5)], all, '2026-11-02', day)).toMatchObject({ bonusPossible: 0 })
     expect(weekProgress(plan(), [task('d', { plan: 'p' })], {}, day, day)).toBeUndefined()
+  })
+})
+
+describe('cash', () => {
+  const a = task('a', { value: 2 })
+  const log: Log = { '2026-11-03': { a: 1 }, '2026-11-04': { a: 0.5 }, [day]: { a: 1 } }
+
+  it('adds up everything earned from the first logged day to today', () => {
+    expect(allTimeEarned([a], [], log, day)).toBe(4)
+    expect(allTimeEarned([a], [], {}, day)).toBe(0)
+  })
+
+  it('takes cash-outs off the balance but not off the all-time total', () => {
+    expect(balance(10, [])).toBe(10)
+    expect(balance(10, [{ date: '2026-11-03', amount: 6 }, { date: day, amount: 4 }])).toBe(0)
   })
 })

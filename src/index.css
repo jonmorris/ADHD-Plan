@@ -839,6 +839,24 @@ button.link {
   transform: translateX(1.35rem);
 }
 
+.cash-out {
+  width: 100%;
+}
+
+.cash-outs {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.cash-outs li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
 .tracking {
   display: flex;
   align-items: center;

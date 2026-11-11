@@ -63,3 +63,22 @@ export function dollars(tasks: Task[], plans: Plan[], log: Log, key: string, tod
   }
   return { earned, possible, bonusEarned, bonusPossible }
 }
+
+// A cash-out: the balance on that day, taken as a real-life reward.
+export type CashOut = { date: string; amount: number }
+
+// Everything earned so far, task values and bonuses, from the first logged day to today.
+export function allTimeEarned(tasks: Task[], plans: Plan[], log: Log, today: string): number {
+  const first = Object.keys(log).sort()[0]
+  let total = 0
+  for (let day = first ?? today; day <= today; day = addDays(day, 1)) {
+    const m = dollars(tasks, plans, log, day, today)
+    total += m.earned + m.bonusEarned
+  }
+  return total
+}
+
+// What's left to cash out: all time earned minus everything already cashed out.
+export function balance(earned: number, cashOuts: CashOut[]): number {
+  return earned - cashOuts.reduce((sum, c) => sum + c.amount, 0)
+}
