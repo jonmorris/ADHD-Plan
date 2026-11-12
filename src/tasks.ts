@@ -28,8 +28,8 @@ export type Task = {
 // 0 = not done, 0.5 = half done, 1 = done, -1 = marked as not done (✗)
 export type State = -1 | 0 | 0.5 | 1
 
-// A task dismissed for the day (in a dismissable plan): it leaves that day's list
-// and counts as neither done nor not done.
+// A repeating task deferred for the day (in a plan that allows it): it leaves that day's
+// list and counts as neither done nor not done.
 export const DISMISSED = -2
 
 // log[date][taskId] = state that day.

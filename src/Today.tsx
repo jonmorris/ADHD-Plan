@@ -261,21 +261,14 @@ export function Today({
     setEditing(undefined)
   }
 
-  // Dismissing takes a task off the day's list without counting it either way (see DISMISSED)
-  const dismissable = (task: Task) => plans.some((p) => p.dismissable && p.title === groupOf(task))
-  const dismissedTasks = sorted.filter((t) => log[date]?.[t.id] === DISMISSED)
+  // Defer pushes a task to the next day. A one-off moves to the day after the one shown, as it
+  // would overnight. A repeating task (in a plan that allows it) skips the day without counting
+  // either way (see DISMISSED) and is back on its next day.
+  const deferrable = (task: Task) =>
+    task.repeat.kind === 'none' || plans.some((p) => p.dismissable && p.title === groupOf(task))
 
-  function dismissTask(task: Task) {
-    saveLog({ ...log, [date]: { ...log[date], [task.id]: DISMISSED } })
-  }
-
-  function restoreTask(task: Task) {
-    const { [task.id]: _, ...rest } = log[date] ?? {}
-    saveLog({ ...log, [date]: rest })
-  }
-
-  // Moves a one-off task to the day after the one shown
   function defer(task: Task) {
+    if (task.repeat.kind !== 'none') return saveLog({ ...log, [date]: { ...log[date], [task.id]: DISMISSED } })
     saveTasks(tasks.map((t) => (t.id === task.id ? { ...t, start: addDays(date, 1) } : t)))
   }
 
@@ -379,14 +372,9 @@ export function Today({
           </span>
           {t.notes && <span class="notes">{t.notes}</span>}
         </button>
-        {!reordering && t.repeat.kind === 'none' && date >= today && state !== 1 && (
+        {!reordering && deferrable(t) && date >= today && state !== 1 && (
           <button class="defer" aria-label={`Defer ${t.title} to the next day`} onClick={() => defer(t)}>
             {DEFER}
-          </button>
-        )}
-        {!reordering && dismissable(t) && (
-          <button class="defer" aria-label={`Dismiss ${t.title}`} onClick={() => dismissTask(t)}>
-            {CLOSE}
           </button>
         )}
         {reordering && (home || top3) && (
@@ -602,7 +590,7 @@ export function Today({
         )
       })}
 
-      {dismissedTasks.length + dayReminders.dismissed.length > 0 && (
+      {dayReminders.dismissed.length > 0 && (
         <section class="tray">
           <div class="group-head">
             <h2>
@@ -611,7 +599,7 @@ export function Today({
                   {trayOpen ? '▾' : '▸'}
                 </span>
                 Dismissed
-                <span class="group-count">{dismissedTasks.length + dayReminders.dismissed.length}</span>
+                <span class="group-count">{dayReminders.dismissed.length}</span>
               </button>
             </h2>
           </div>
@@ -628,17 +616,6 @@ export function Today({
                   aria-label={`Restore ${r.title}`}
                   onClick={() => saveDismissed(toggleDismissed(dismissed, date, r.id))}
                 >
-                  {RESTORE}
-                </button>
-              </li>
-            ))}
-            {dismissedTasks.map((t) => (
-              <li key={t.id}>
-                <span class="title">
-                  <span class="name">{t.title}</span>
-                  <span class="notes">{groupOf(t)}</span>
-                </span>
-                <button class="defer" aria-label={`Restore ${t.title}`} onClick={() => restoreTask(t)}>
                   {RESTORE}
                 </button>
               </li>
