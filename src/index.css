@@ -458,24 +458,16 @@ button.link {
   color: var(--muted);
 }
 
-/* A done task shrinks to its name (and its filled value pill) */
-.tasks li.done .title {
+/* A done or ✕ task shrinks to its name (and its value pill) */
+.tasks li.done .title,
+.tasks li.not-done .title {
   padding: 0.45rem 0;
 }
 
 .tasks li.done .repeat,
-.tasks li.done .notes {
-  display: none;
-}
-
-/* Sequential groups: a ✕ task shrinks to just its name */
-.tasks.sequential li.not-done .title {
-  padding: 0.45rem 0;
-}
-
-.tasks.sequential li.not-done .repeat,
-.tasks.sequential li.not-done .notes,
-.tasks.sequential li.not-done .value-pill {
+.tasks li.done .notes,
+.tasks li.not-done .repeat,
+.tasks li.not-done .notes {
   display: none;
 }
 
