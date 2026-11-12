@@ -11,7 +11,7 @@ import { usePersisted } from './store'
 import type { Log, Task } from './tasks'
 import { Today } from './Today'
 
-const TABS = { today: 'Today', playbook: 'Playbook', account: 'Account' }
+const TABS = { today: 'Today', playbook: 'Manage', account: 'Account' }
 
 export function App() {
   const [tab, setTab] = useState<keyof typeof TABS>('today')

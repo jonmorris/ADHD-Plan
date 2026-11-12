@@ -225,7 +225,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
               setReordering(false)
             }}
           >
-            ‹ Playbook
+            ‹ Manage
           </button>
           <button onClick={() => setPlanDraft(openPlan)}>Edit</button>
         </div>
@@ -310,7 +310,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
 
   return (
     <>
-      <h1>Playbook</h1>
+      <h1>Manage</h1>
 
       <h2>Plans</h2>
       <ul class="plans">
