@@ -371,6 +371,13 @@ button.link {
   opacity: 0.6;
 }
 
+/* Marked ✕ with a penalty: what it cost */
+.tasks li.not-done .value-pill.penalty {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, var(--bg));
+  opacity: 1;
+}
+
 .defer-space {
   flex-shrink: 0;
   width: 2.5rem;

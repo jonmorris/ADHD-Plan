@@ -33,6 +33,9 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
   const [allowHalf, setAllowHalf] = useState(!!task.allowHalf)
   const [periodic, setPeriodic] = useState(!!task.periodic)
   const [value, setValue] = useState(task.value ?? 1)
+  // Penalty when marked ✕: off by default; when on, it starts at the task's value
+  const [penaltyOn, setPenaltyOn] = useState(task.penalty !== undefined)
+  const [penalty, setPenalty] = useState(task.penalty ?? value)
   const [group, setGroup] = useState(groupOf(task))
   const [newGroup, setNewGroup] = useState('')
   const [kind, setKind] = useState<Repeat['kind']>(task.repeat.kind)
@@ -55,6 +58,8 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
       periodic: (kind !== 'none' && periodic && !reminder) || undefined,
       allowHalf: allowHalf || undefined,
       value: value === 1 ? undefined : value,
+      // Only Dollars mode shows the penalty; otherwise it's kept as it was
+      penalty: showValue ? (penaltyOn && !reminder ? penalty : undefined) : task.penalty,
       ...(groups && { group: group === NEW_GROUP ? newGroup.trim() : group }),
     }, reminder, type)
   }
@@ -193,7 +198,15 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
         {showValue && !reminder && (
           <label class="field">
             Value when done
-            <select value={value} onChange={(e) => setValue(Number(e.currentTarget.value))}>
+            <select
+              value={value}
+              onChange={(e) => {
+                const v = Number(e.currentTarget.value)
+                // A penalty matching the value keeps matching it
+                if (penalty === value) setPenalty(v)
+                setValue(v)
+              }}
+            >
               {VALUES.map((v) => (
                 <option value={v}>${v}</option>
               ))}
@@ -207,6 +220,33 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
             <span>
               Allow half done
               <small>Tap once for half done, twice for done</small>
+            </span>
+          </label>
+        )}
+
+        {showValue && !reminder && (
+          <label class="check-field">
+            <input type="checkbox" checked={penaltyOn} onChange={(e) => setPenaltyOn(e.currentTarget.checked)} />
+            <span>
+              Penalty if not done
+              <small>Marking it ✕ takes money away</small>
+            </span>
+          </label>
+        )}
+
+        {showValue && !reminder && penaltyOn && (
+          <label class="field">
+            Penalty
+            <span class="money-input">
+              −$
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
+                value={penalty}
+                onInput={(e) => setPenalty(Math.max(0, Math.round(Number(e.currentTarget.value))))}
+              />
             </span>
           </label>
         )}

@@ -31,6 +31,13 @@ describe('dollars', () => {
     expect(dollars([a, b, c], [], log, day, day)).toMatchObject({ earned: 1, possible: 8 })
   })
 
+  it('takes away the penalty of a task marked ✕, and only then', () => {
+    const p = task('p', { value: 2, penalty: 2 })
+    expect(dollars([a, p], [], { [day]: { a: 1, p: -1 } }, day, day)).toMatchObject({ earned: -1, possible: 3 })
+    expect(dollars([a, p], [], { [day]: { a: 1, p: 0.5 } }, day, day)).toMatchObject({ earned: 1 })
+    expect(dollars([a, p], [], { [day]: { a: 1 } }, day, day)).toMatchObject({ earned: 1 })
+  })
+
   it("adds a plan's daily bonus only when all its daily tasks that day are done", () => {
     expect(dollars([a, b, c], [plan(10)], { [day]: { b: 1 } }, day, day)).toEqual({
       earned: 5,

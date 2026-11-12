@@ -16,7 +16,7 @@ import {
   type State,
   type Task,
 } from './tasks'
-import { dayProgress, dollars, valueOf, weekProgress, type Tracking } from './money'
+import { dayProgress, dollars, usd, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, swapItems, type Plan } from './plans'
 import { MAX_PRIORITIES, toggleDoNext, togglePriority, type DoNext, type Focus, type Priorities } from './priorities'
@@ -382,7 +382,12 @@ export function Today({
           </span>
           {t.notes && <span class="notes">{t.notes}</span>}
         </button>
-        {money && <span class="value-pill">${valueOf(t)}</span>}
+        {money &&
+          (state === -1 && t.penalty ? (
+            <span class="value-pill penalty">−${t.penalty}</span>
+          ) : (
+            <span class="value-pill">${valueOf(t)}</span>
+          ))}
         {!reordering && deferrable(t) && date >= today && state !== 1 ? (
           <button class="defer" aria-label={`Defer ${t.title} to the next day`} onClick={() => defer(t)}>
             {DEFER}
@@ -428,7 +433,7 @@ export function Today({
       <p class="count">
         {money ? (
           <>
-            <strong class="earned">${money.earned}</strong> of ${money.possible} earned
+            <strong class="earned">{usd(money.earned)}</strong> of ${money.possible} earned
           </>
         ) : (
           `${done} of ${due.length} done`
@@ -579,7 +584,7 @@ export function Today({
                     {weeklyPlan && week && <span class="group-bonus">Week bonus ${weeklyPlan.weeklyBonus}</span>}
                     <span class="group-count">
                       {groupMoney
-                        ? `$${groupMoney.earned}/$${groupMoney.possible}`
+                        ? `${usd(groupMoney.earned)}/$${groupMoney.possible}`
                         : `${groupDone}/${section.tasks.length}`}
                     </span>
                   </span>
