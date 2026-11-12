@@ -8,7 +8,6 @@ import { isDueOn, stateOn, type Log, type Task } from './tasks'
 export type Tracking = 'count' | 'dollars'
 
 export const VALUES = [1, 2, 5, 10]
-export const BONUSES = [0, 1, 2, 5, 10]
 
 export const valueOf = (task: Task) => task.value ?? 1
 

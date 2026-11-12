@@ -22,7 +22,7 @@
   --on-accent: var(--on-accent-light);
   --radius: 0.75rem;
   --danger: #c62828;
-  --highlight: #fff4cc; /* behind the Priorities group */
+  --highlight: color-mix(in srgb, var(--accent) 14%, var(--bg)); /* behind the Priorities group, tinted by the accent */
   /* Checkbox color per cadence (validated categorical palette, light steps) */
   --c-none: #2a78d6;
   --c-daily: #eb6834;
@@ -64,7 +64,7 @@
     --accent: var(--accent-dark);
     --on-accent: var(--on-accent-dark);
     --danger: #ef6b6b;
-    --highlight: #4a3c0c;
+    --highlight: color-mix(in srgb, var(--accent) 24%, var(--bg));
     --c-none: #3987e5;
     --c-daily: #d95926;
     --c-weekly: #199e70;
@@ -82,7 +82,7 @@
   --accent: var(--accent-dark);
   --on-accent: var(--on-accent-dark);
   --danger: #ef6b6b;
-  --highlight: #4a3c0c;
+  --highlight: color-mix(in srgb, var(--accent) 24%, var(--bg));
   --c-none: #3987e5;
   --c-daily: #d95926;
   --c-weekly: #199e70;
@@ -671,6 +671,14 @@ button.link {
 .end-row {
   display: flex;
   gap: 0.5rem;
+}
+
+/* A plan's settings on its page */
+.plan-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 1rem 0 1.5rem;
 }
 
 /* A dollar amount: "$" then a short number box */
