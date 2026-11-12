@@ -181,6 +181,8 @@ export function Today({
   const [editingReminder, setEditingReminder] = useState(false)
   const [reordering, setReordering] = useState(false)
   const [trayOpen, setTrayOpen] = useState(false)
+  // Sequential groups opened up to show the tasks still waiting their turn
+  const [showAllOf, setShowAllOf] = useState<string[]>([])
   useBack(!!editing, () => setEditing(undefined))
 
   const sorted = sortTasks(tasks, order, itemIndex(plans))
@@ -553,7 +555,9 @@ export function Today({
         const weeklyPlan = money && plans.find((p) => p.weeklyBonus && p.title === section.group)
         const week = weeklyPlan && weekProgress(weeklyPlan, tasks, log, date, today)
         const sequential = plans.some((p) => p.sequential && p.title === section.group)
-        const shown = sequential && !reordering ? oneAtATime(section.tasks, date, log) : section.tasks
+        const showAll = showAllOf.includes(collapseKey)
+        const shown = sequential && !reordering && !showAll ? oneAtATime(section.tasks, date, log) : section.tasks
+        const hiddenCount = sequential && !reordering ? section.tasks.length - oneAtATime(section.tasks, date, log).length : 0
         return (
           <section key={section.group || '(none)'}>
             <div class="group-head">
@@ -586,6 +590,16 @@ export function Today({
             <ul class="tasks" hidden={isCollapsed}>
               {shown.map((t, i) => taskRow(t, i, section.tasks, true))}
             </ul>
+            {hiddenCount > 0 && !isCollapsed && (
+              <button
+                class="show-more"
+                onClick={() =>
+                  setShowAllOf(showAll ? showAllOf.filter((k) => k !== collapseKey) : [...showAllOf, collapseKey])
+                }
+              >
+                {showAll ? 'Show less' : `Show ${hiddenCount} more`}
+              </button>
+            )}
           </section>
         )
       })}
