@@ -599,7 +599,7 @@ export function Today({
                 />
               )}
             </div>
-            <ul class={sequential ? 'tasks sequential' : 'tasks'} hidden={isCollapsed}>
+            <ul class="tasks" hidden={isCollapsed}>
               {shown.map((t, i) => taskRow(t, i, section.tasks, true))}
             </ul>
             {hiddenCount > 0 && !isCollapsed && (
