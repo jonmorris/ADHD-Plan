@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
-import { Analytics, type Theme } from './Analytics'
+import { Analytics, type Accent, type Theme } from './Analytics'
 import { useBack } from './back'
 import { toDateKey } from './dates'
 import type { CashOut, Tracking } from './money'
@@ -39,8 +39,12 @@ export function App() {
     if (theme === 'system' || !theme) delete document.documentElement.dataset.theme
     else document.documentElement.dataset.theme = theme
   }, [theme])
+  const [accent, saveAccent] = usePersisted<Accent>('accent', 'blue')
+  useEffect(() => {
+    if (accent) document.documentElement.dataset.accent = accent
+  }, [accent])
 
-  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme || !focus || !doNext || !cashOuts) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme || !focus || !doNext || !cashOuts || !accent) return null
 
   function exportData() {
     const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, priorities, doNext, cashOuts, order, groupOrder }, null, 2)], { type: 'application/json' })
@@ -92,7 +96,7 @@ export function App() {
             saveFocus={saveFocus}
             tasks={tasks} saveTasks={saveTasks} today={today} />
         )}
-        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} cashOuts={cashOuts} saveCashOuts={saveCashOuts} theme={theme} saveTheme={saveTheme} />}
+        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} cashOuts={cashOuts} saveCashOuts={saveCashOuts} theme={theme} saveTheme={saveTheme} accent={accent} saveAccent={saveAccent} />}
         <button class="export" onClick={exportData}>
           Export backup
         </button>
