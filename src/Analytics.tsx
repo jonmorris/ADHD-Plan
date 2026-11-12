@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks'
 import { fromDateKey } from './dates'
-import { allTimeEarned, balance, dollars, weekProgress, type CashOut } from './money'
+import { allTimeEarned, balance, dollars, usd, weekProgress, type CashOut } from './money'
 import type { Plan } from './plans'
 import { summarize, type Log, type Task } from './tasks'
 
@@ -39,7 +39,7 @@ export function Stats({ tasks, plans, log, today, days, full }: Data & { days: n
       )}
       <div class="stat">
         <span class="label">Dollars earned</span>
-        <span class="value">${totalEarned}</span>
+        <span class="value">{usd(totalEarned)}</span>
       </div>
       {full && (
         <div class="stat">
@@ -64,7 +64,7 @@ export function DayChart({ tasks, plans, log, today, days }: Data & { days: numb
         <strong>
           {readout.done} of {readout.due} done
         </strong>{' '}
-        · ${readoutMoney.earned} earned
+        · {usd(readoutMoney.earned)} earned
         {readoutMoney.bonusEarned > 0 && ` + $${readoutMoney.bonusEarned} bonus`} · {formatDay(readout.date)}
       </p>
       <div class="chart">
@@ -138,11 +138,11 @@ export function Cash({ tasks, plans, log, today, cashOuts, saveCashOuts, history
       <div class="stats">
         <div class="stat">
           <span class="label">Balance</span>
-          <span class="value">${cash}</span>
+          <span class="value">{usd(cash)}</span>
         </div>
         <div class="stat">
           <span class="label">Earned all time</span>
-          <span class="value">${earnedAllTime}</span>
+          <span class="value">{usd(earnedAllTime)}</span>
         </div>
       </div>
       <button class="primary cash-out" disabled={cash <= 0} onClick={cashOut}>

@@ -1,5 +1,5 @@
 // Dollars: a separate tally from the task count. A task earns its value when fully done
-// (half done earns nothing). A plan can also earn a daily bonus on a day when all its daily
+// (half done earns nothing), and loses its penalty, if it has one, when marked ✕. A plan can also earn a daily bonus on a day when all its daily
 // tasks are done, and a weekly bonus when all its weekly tasks in a week (Sun–Sat) are done.
 import { addDays, fromDateKey } from './dates'
 import type { Plan } from './plans'
@@ -10,6 +10,9 @@ export type Tracking = 'count' | 'dollars'
 export const VALUES = [1, 2, 5, 10]
 
 export const valueOf = (task: Task) => task.value ?? 1
+
+// "$5", or "−$5" when penalties take a total below zero
+export const usd = (n: number) => (n < 0 ? `−$${-n}` : `$${n}`)
 
 // The plan's weekly tasks in the week of `key`: how many are due, how many done,
 // and the last day one is due (the day the weekly bonus counts on).
@@ -44,7 +47,9 @@ export function dollars(tasks: Task[], plans: Plan[], log: Log, key: string, tod
   let possible = 0
   for (const t of tasks.filter((t) => isDueOn(t, key, log, today))) {
     possible += valueOf(t)
-    if (stateOn(t, key, log) === 1) earned += valueOf(t)
+    const state = stateOn(t, key, log)
+    if (state === 1) earned += valueOf(t)
+    if (state === -1 && t.penalty) earned -= t.penalty
   }
   let bonusEarned = 0
   let bonusPossible = 0
