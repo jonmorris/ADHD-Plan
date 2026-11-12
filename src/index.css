@@ -673,6 +673,14 @@ button.link {
   gap: 0.5rem;
 }
 
+/* A plan's settings on its page */
+.plan-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 1rem 0 1.5rem;
+}
+
 /* A dollar amount: "$" then a short number box */
 .money-input {
   display: flex;

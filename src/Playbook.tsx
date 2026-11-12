@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks'
 import { useBack } from './back'
-import { BONUSES, type Tracking } from './money'
+import type { Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import {
   disablePlan,
@@ -65,6 +65,58 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
 
   function savePlan(plan: Plan) {
     savePlans(plans.map((p) => (p.id === plan.id ? plan : p)))
+  }
+
+  // The plan's settings, shown and changed right on its page
+  function planSettings(plan: Plan) {
+    const bonusInput = (label: string, key: 'bonus' | 'weeklyBonus') => (
+      <label class="field">
+        {label}
+        <span class="money-input">
+          $
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1}
+            value={plan[key] ?? 0}
+            onInput={(e) => savePlan({ ...plan, [key]: Math.max(0, Math.round(Number(e.currentTarget.value))) || undefined })}
+          />
+        </span>
+      </label>
+    )
+    return (
+      <div class="plan-settings">
+        <label class="check-field">
+          <input
+            type="checkbox"
+            checked={!!plan.sequential}
+            onChange={(e) => savePlan({ ...plan, sequential: e.currentTarget.checked || undefined })}
+          />
+          <span>
+            Sequential
+            <small>Show its tasks on Today one at a time, in order. The next appears once you tick or ✕ the one before.</small>
+          </span>
+        </label>
+        <label class="check-field">
+          <input
+            type="checkbox"
+            checked={!!plan.dismissable}
+            onChange={(e) => savePlan({ ...plan, dismissable: e.currentTarget.checked || undefined })}
+          />
+          <span>
+            Deferrable
+            <small>Its repeating tasks get the → button on Today to push them to the next day. A deferred task doesn't count as done or not done.</small>
+          </span>
+        </label>
+        {showDollars && (
+          <>
+            {bonusInput('Daily bonus: all its daily tasks done that day', 'bonus')}
+            {bonusInput('Weekly bonus: all its weekly tasks done that week', 'weeklyBonus')}
+          </>
+        )}
+      </div>
+    )
   }
 
   function submitPlan(e: Event) {
@@ -142,62 +194,6 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
           aria-label="Summary"
           rows={3}
         />
-        <label class="check-field">
-          <input
-            type="checkbox"
-            checked={!!planDraft.sequential}
-            onChange={(e) => setPlanDraft({ ...planDraft, sequential: e.currentTarget.checked || undefined })}
-          />
-          <span>
-            Sequential
-            <small>Show its tasks on Today one at a time, in order. The next appears once you tick or ✕ the one before.</small>
-          </span>
-        </label>
-        <label class="check-field">
-          <input
-            type="checkbox"
-            checked={!!planDraft.dismissable}
-            onChange={(e) => setPlanDraft({ ...planDraft, dismissable: e.currentTarget.checked || undefined })}
-          />
-          <span>
-            Deferrable
-            <small>Its repeating tasks get the → button on Today to push them to the next day. A deferred task doesn't count as done or not done.</small>
-          </span>
-        </label>
-        {showDollars && (
-          <>
-            <label class="field">
-              Daily bonus: all its daily tasks done that day
-              <select
-                value={planDraft.bonus ?? 0}
-                onChange={(e) => setPlanDraft({ ...planDraft, bonus: Number(e.currentTarget.value) || undefined })}
-              >
-                {BONUSES.map((v) => (
-                  <option value={v}>${v}</option>
-                ))}
-              </select>
-            </label>
-            <label class="field">
-              Weekly bonus: all its weekly tasks done that week
-              <span class="money-input">
-                $
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  step={1}
-                  value={planDraft.weeklyBonus ?? 0}
-                  onInput={(e) =>
-                    setPlanDraft({
-                      ...planDraft,
-                      weeklyBonus: Math.max(0, Math.round(Number(e.currentTarget.value))) || undefined,
-                    })
-                  }
-                />
-              </span>
-            </label>
-          </>
-        )}
         <div class="actions">
           {!isNew && (
             <button type="button" class="danger" onClick={() => deletePlan(planDraft)}>
@@ -234,6 +230,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
           {planSwitch(openPlan)}
         </div>
         {openPlan.summary && <p>{openPlan.summary}</p>}
+        {planSettings(openPlan)}
         {newTasks > 0 && (
           <p class="plan-update">
             This plan has {newTasks} task{newTasks === 1 ? '' : 's'} you don't have yet.{' '}
