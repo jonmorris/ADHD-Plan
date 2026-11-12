@@ -9,13 +9,22 @@ const RANGES = [7, 30, 90]
 export type Theme = 'system' | 'light' | 'dark'
 const THEMES: Record<Theme, string> = { system: 'System', light: 'Light', dark: 'Dark' }
 
-type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string; cashOuts: CashOut[]; saveCashOuts: (cashOuts: CashOut[]) => void; theme: Theme; saveTheme: (theme: Theme) => void }
+export type Accent = 'blue' | 'teal' | 'purple' | 'coral'
+// Swatch colours match --accent-light in index.css
+const ACCENTS: Record<Accent, [string, string]> = {
+  blue: ['Blue', '#2f6fde'],
+  teal: ['Teal', '#0f766e'],
+  purple: ['Purple', '#6b4fd8'],
+  coral: ['Coral', '#c4472b'],
+}
+
+type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string; cashOuts: CashOut[]; saveCashOuts: (cashOuts: CashOut[]) => void; theme: Theme; saveTheme: (theme: Theme) => void; accent: Accent; saveAccent: (accent: Accent) => void }
 
 function formatDay(key: string) {
   return fromDateKey(key).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-export function Analytics({ tasks, plans, log, today, cashOuts, saveCashOuts, theme, saveTheme }: Props) {
+export function Analytics({ tasks, plans, log, today, cashOuts, saveCashOuts, theme, saveTheme, accent, saveAccent }: Props) {
   const [days, setDays] = useState(7)
   const [selected, setSelected] = useState(today)
 
@@ -194,6 +203,18 @@ export function Analytics({ tasks, plans, log, today, cashOuts, saveCashOuts, th
           {(Object.keys(THEMES) as Theme[]).map((t) => (
             <button class={theme === t ? 'on' : ''} aria-pressed={theme === t} onClick={() => saveTheme(t)}>
               {THEMES[t]}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Accent</h2>
+        <div class="ranges" role="group" aria-label="Accent colour">
+          {(Object.keys(ACCENTS) as Accent[]).map((a) => (
+            <button class={accent === a ? 'on' : ''} aria-pressed={accent === a} onClick={() => saveAccent(a)}>
+              <span class="swatch" style={{ background: ACCENTS[a][1] }} />
+              {ACCENTS[a][0]}
             </button>
           ))}
         </div>

@@ -16,6 +16,8 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Precache the bundled font too, so the app looks right offline
+      workbox: { globPatterns: ['**/*.{js,css,html,png,svg,woff2}'] },
       manifest: {
         // A fresh id makes Chrome treat this as a new app, so phones holding a stale install can install again
         id: 'adhd-plan',
