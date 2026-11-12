@@ -861,6 +861,12 @@ button.link {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Line the switches up whatever their label */
+.tracking > span {
+  min-width: 3.5rem;
 }
 
 /* Analytics */
