@@ -918,6 +918,16 @@ button.link {
   width: 100%;
 }
 
+/* Sequential groups: reveal the tasks still waiting their turn */
+.show-more {
+  display: block;
+  margin: 0.25rem 0 0 auto;
+  padding: 0.4rem 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
 /* Accent picker: a swatch of each colour */
 .swatch {
   display: inline-block;
