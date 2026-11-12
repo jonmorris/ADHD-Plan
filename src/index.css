@@ -410,6 +410,16 @@ button.link {
   color: var(--muted);
 }
 
+/* Sequential groups: a ✕ task shrinks to just its name */
+.tasks.sequential li.not-done .title {
+  padding: 0.45rem 0;
+}
+
+.tasks.sequential li.not-done .repeat,
+.tasks.sequential li.not-done .notes {
+  display: none;
+}
+
 .check.s2::after {
   content: '';
   position: absolute;
