@@ -166,3 +166,22 @@ describe('editing a plan', () => {
     expect(swapItems(plans, tasks[0], own)).toBeUndefined()
   })
 })
+
+describe('ordering with several plans on', () => {
+  it("keeps each plan's own order, whatever order the tasks are stored in", () => {
+    let seed = 1
+    const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+    const shuffle = <T>(xs: T[]) => [...xs].sort(() => random() - 0.5)
+    let tasks: Task[] = []
+    for (const plan of plans) tasks = enablePlan(plan, tasks, today)
+    tasks.push({ id: 'own', title: 'Own task', start: today, repeat: { kind: 'daily', every: 1 } })
+    for (let trial = 0; trial < 50; trial++) {
+      const reordered = plans.map((p) => ({ ...p, items: shuffle(p.items) }))
+      const sorted = sortTasks(shuffle(tasks), ['own'], itemIndex(reordered))
+      for (const plan of reordered) {
+        const got = sorted.filter((t) => t.plan === plan.id).map((t) => t.planItem)
+        expect(got).toEqual(plan.items.map((i) => i.id).filter((id) => got.includes(id)))
+      }
+    }
+  })
+})

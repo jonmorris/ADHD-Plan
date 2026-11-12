@@ -91,19 +91,23 @@ export function byCadence(a: Task, b: Task): number {
   return cadenceDays(a.repeat) - cadenceDays(b.repeat)
 }
 
-// Tasks in the user's saved order. Tasks not in it yet (e.g. newly added) go after, by cadence,
-// except tasks from the same plan, which keep the plan's order (`planIndex`).
+// Tasks in the user's saved order. Tasks not in it go after: plan tasks in their plan's order
+// (`planIndex`), then the rest by cadence. Every pair is compared the same way (plan tasks by
+// plan, then position), so the sort is consistent however many plans are on.
 export function sortTasks(tasks: Task[], order: string[], planIndex?: (t: Task) => number | undefined): Task[] {
   const pos = (t: Task) => {
     const i = order.indexOf(t.id)
     return i === -1 ? Infinity : i
   }
-  const byPlan = (a: Task, b: Task) => {
-    const i = a.plan && a.plan === b.plan ? planIndex?.(a) : undefined
-    const j = i === undefined ? undefined : planIndex?.(b)
-    return i === undefined || j === undefined ? byCadence(a, b) : i - j
+  const rest = (a: Task, b: Task) => {
+    const i = planIndex?.(a)
+    const j = planIndex?.(b)
+    if (i !== undefined && j !== undefined) return a.plan === b.plan ? i - j : a.plan! < b.plan! ? -1 : 1
+    if (i !== undefined) return -1
+    if (j !== undefined) return 1
+    return byCadence(a, b)
   }
-  return [...tasks].sort((a, b) => pos(a) - pos(b) || byPlan(a, b))
+  return [...tasks].sort((a, b) => pos(a) - pos(b) || rest(a, b))
 }
 
 function daysInMonth(d: Date): number {
