@@ -12,7 +12,6 @@ import {
   type Plan,
   type PlanItem,
 } from './plans'
-import type { Focus } from './priorities'
 import { TaskForm } from './TaskForm'
 import { describeRepeat, type Task } from './tasks'
 
@@ -22,15 +21,12 @@ type Props = {
   order: string[]
   saveOrder: (order: string[]) => void
   tracking: Tracking
-  saveTracking: (tracking: Tracking) => void
-  focus: Focus
-  saveFocus: (focus: Focus) => void
   tasks: Task[]
   saveTasks: (tasks: Task[]) => void
   today: string
 }
 
-export function Playbook({ plans, savePlans, order, saveOrder, tracking, saveTracking, focus, saveFocus, tasks, saveTasks, today }: Props) {
+export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, saveTasks, today }: Props) {
   const showDollars = tracking === 'dollars'
   const [openPlanId, setOpenPlanId] = useState<string>()
   const [planDraft, setPlanDraft] = useState<Plan>()
@@ -315,28 +311,6 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, saveTra
   return (
     <>
       <h1>Playbook</h1>
-
-      <div class="tracking">
-        <span id="tracking-label">Track</span>
-        <div class="ranges" role="group" aria-labelledby="tracking-label">
-          {(['count', 'dollars'] as const).map((t) => (
-            <button class={tracking === t ? 'on' : ''} aria-pressed={tracking === t} onClick={() => saveTracking(t)}>
-              {t === 'count' ? 'Count' : 'Dollars'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div class="tracking">
-        <span id="focus-label">Focus</span>
-        <div class="ranges" role="group" aria-labelledby="focus-label">
-          {(['doNext', 'top3'] as const).map((f) => (
-            <button class={focus === f ? 'on' : ''} aria-pressed={focus === f} onClick={() => saveFocus(f)}>
-              {f === 'doNext' ? 'Do next' : 'Top 3'}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <h2>Plans</h2>
       <ul class="plans">
