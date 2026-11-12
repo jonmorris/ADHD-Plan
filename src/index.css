@@ -715,12 +715,29 @@ button.link {
   gap: 0.5rem;
 }
 
-/* A plan's settings on its page */
+/* A plan's settings, in its Edit form */
 .plan-settings {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  margin: 1rem 0 1.5rem;
+}
+
+/* The options a plan has on, shown on its page */
+.plan-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.plan-chips li {
+  padding: 0.2rem 0.65rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 /* A dollar amount: "$" then a short number box */
