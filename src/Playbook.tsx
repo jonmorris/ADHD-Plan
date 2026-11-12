@@ -164,8 +164,8 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, saveTra
             onChange={(e) => setPlanDraft({ ...planDraft, dismissable: e.currentTarget.checked || undefined })}
           />
           <span>
-            Dismissable
-            <small>Each task gets a ✕ on Today to take it off the list for the day. Dismissed tasks don't count as done or not done.</small>
+            Deferrable
+            <small>Its repeating tasks get the → button on Today to push them to the next day. A deferred task doesn't count as done or not done.</small>
           </span>
         </label>
         {showDollars && (
