@@ -6,38 +6,124 @@ import { summarize, type Log, type Task } from './tasks'
 
 const RANGES = [7, 30, 90]
 
-export type Theme = 'system' | 'light' | 'dark'
-const THEMES: Record<Theme, string> = { system: 'System', light: 'Light', dark: 'Dark' }
-
-export type Accent = 'blue' | 'teal' | 'purple' | 'coral'
-// Swatch colours match --accent-light in index.css
-const ACCENTS: Record<Accent, [string, string]> = {
-  blue: ['Blue', '#2f6fde'],
-  teal: ['Teal', '#0f766e'],
-  purple: ['Purple', '#6b4fd8'],
-  coral: ['Coral', '#c4472b'],
-}
-
-type Props = { tasks: Task[]; plans: Plan[]; log: Log; today: string; cashOuts: CashOut[]; saveCashOuts: (cashOuts: CashOut[]) => void; theme: Theme; saveTheme: (theme: Theme) => void; accent: Accent; saveAccent: (accent: Accent) => void }
+type Data = { tasks: Task[]; plans: Plan[]; log: Log; today: string }
+type CashProps = Data & { cashOuts: CashOut[]; saveCashOuts: (cashOuts: CashOut[]) => void }
 
 function formatDay(key: string) {
   return fromDateKey(key).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-export function Analytics({ tasks, plans, log, today, cashOuts, saveCashOuts, theme, saveTheme, accent, saveAccent }: Props) {
-  const [days, setDays] = useState(7)
-  const [selected, setSelected] = useState(today)
-
-  const { perDay, repeating, oneOffsDone } = summarize(tasks, log, today, days)
+// Headline numbers for the last `days` days
+export function Stats({ tasks, plans, log, today, days, full }: Data & { days: number; full?: boolean }) {
+  const { perDay, oneOffsDone } = summarize(tasks, log, today, days)
   const totalDone = perDay.reduce((sum, d) => sum + d.done, 0)
   const totalDue = perDay.reduce((sum, d) => sum + d.due, 0)
-  const maxDue = Math.max(1, ...perDay.map((d) => d.due))
-  const readout = perDay.find((d) => d.date === selected) ?? perDay[perDay.length - 1]
-  const moneyOn = (date: string) => dollars(tasks, plans, log, date, today)
-  const perDayMoney = perDay.map((d) => moneyOn(d.date))
+  const perDayMoney = perDay.map((d) => dollars(tasks, plans, log, d.date, today))
   const totalEarned = perDayMoney.reduce((sum, m) => sum + m.earned, 0)
   const totalBonuses = perDayMoney.reduce((sum, m) => sum + m.bonusEarned, 0)
-  const readoutMoney = moneyOn(readout.date)
+  return (
+    <div class={full ? 'stats' : 'stats three'}>
+      <div class="stat">
+        <span class="label">Completion</span>
+        <span class="value">{totalDue ? Math.round((totalDone / totalDue) * 100) : 0}%</span>
+      </div>
+      <div class="stat">
+        <span class="label">Tasks done</span>
+        <span class="value">{totalDone}</span>
+      </div>
+      {full && (
+        <div class="stat">
+          <span class="label">One-offs finished</span>
+          <span class="value">{oneOffsDone}</span>
+        </div>
+      )}
+      <div class="stat">
+        <span class="label">Dollars earned</span>
+        <span class="value">${totalEarned}</span>
+      </div>
+      {full && (
+        <div class="stat">
+          <span class="label">Bonuses earned</span>
+          <span class="value">${totalBonuses}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function DayChart({ tasks, plans, log, today, days }: Data & { days: number }) {
+  const [selected, setSelected] = useState(today)
+  const { perDay } = summarize(tasks, log, today, days)
+  const maxDue = Math.max(1, ...perDay.map((d) => d.due))
+  const readout = perDay.find((d) => d.date === selected) ?? perDay[perDay.length - 1]
+  const readoutMoney = dollars(tasks, plans, log, readout.date, today)
+  return (
+    <section>
+      <h2>Done per day</h2>
+      <p class="readout" aria-live="polite">
+        <strong>
+          {readout.done} of {readout.due} done
+        </strong>{' '}
+        · ${readoutMoney.earned} earned
+        {readoutMoney.bonusEarned > 0 && ` + $${readoutMoney.bonusEarned} bonus`} · {formatDay(readout.date)}
+      </p>
+      <div class="chart">
+        {perDay.map((d) => (
+          <button
+            class={`col${d.date === readout.date ? ' on' : ''}`}
+            aria-label={`${formatDay(d.date)}: ${d.done} of ${d.due} done`}
+            onPointerEnter={() => setSelected(d.date)}
+            onFocus={() => setSelected(d.date)}
+            onClick={() => setSelected(d.date)}
+          >
+            <span class="track" style={{ height: `${(d.due / maxDue) * 100}%` }}>
+              <span class="fill" style={{ height: d.due ? `${(d.done / d.due) * 100}%` : 0 }} />
+            </span>
+          </button>
+        ))}
+      </div>
+      <div class="chart-axis">
+        <span>{formatDay(perDay[0].date)}</span>
+        <span>Today</span>
+      </div>
+    </section>
+  )
+}
+
+export function WeeklyBonuses({ tasks, plans, log, today }: Data) {
+  const weeklyBonuses = plans.flatMap((plan) => {
+    const week = plan.weeklyBonus ? weekProgress(plan, tasks, log, today, today) : undefined
+    return week ? [{ plan, week }] : []
+  })
+  if (weeklyBonuses.length === 0) return null
+  return (
+    <section>
+      <h2>Weekly bonuses this week</h2>
+      <table class="task-table">
+        <thead>
+          <tr>
+            <th>Plan</th>
+            <th>Bonus</th>
+            <th>Done</th>
+          </tr>
+        </thead>
+        <tbody>
+          {weeklyBonuses.map(({ plan, week }) => (
+            <tr key={plan.id}>
+              <td>{plan.title}</td>
+              <td>${plan.weeklyBonus}</td>
+              <td>
+                {week.done} of {week.due}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  )
+}
+
+export function Cash({ tasks, plans, log, today, cashOuts, saveCashOuts, history }: CashProps & { history?: boolean }) {
   const earnedAllTime = allTimeEarned(tasks, plans, log, today)
   const cash = balance(earnedAllTime, cashOuts)
 
@@ -46,10 +132,41 @@ export function Analytics({ tasks, plans, log, today, cashOuts, saveCashOuts, th
     saveCashOuts([...cashOuts, { date: today, amount: cash }])
   }
 
-  const weeklyBonuses = plans.flatMap((plan) => {
-    const week = plan.weeklyBonus ? weekProgress(plan, tasks, log, today, today) : undefined
-    return week ? [{ plan, week }] : []
-  })
+  return (
+    <section>
+      <h2>Cash</h2>
+      <div class="stats">
+        <div class="stat">
+          <span class="label">Balance</span>
+          <span class="value">${cash}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Earned all time</span>
+          <span class="value">${earnedAllTime}</span>
+        </div>
+      </div>
+      <button class="primary cash-out" disabled={cash <= 0} onClick={cashOut}>
+        Cash out ${Math.max(cash, 0)}
+      </button>
+      {history && cashOuts.length > 0 && (
+        <ul class="cash-outs">
+          {[...cashOuts].reverse().map((c) => (
+            <li>
+              <span>{formatDay(c.date)}</span>
+              <span>${c.amount}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+// The full analytics view, opened from the Account dashboard
+export function Analytics(props: CashProps) {
+  const { tasks, log, today } = props
+  const [days, setDays] = useState(7)
+  const { repeating } = summarize(tasks, log, today, days)
 
   return (
     <>
@@ -63,111 +180,10 @@ export function Analytics({ tasks, plans, log, today, cashOuts, saveCashOuts, th
         ))}
       </div>
 
-      <div class="stats">
-        <div class="stat">
-          <span class="label">Completion</span>
-          <span class="value">{totalDue ? Math.round((totalDone / totalDue) * 100) : 0}%</span>
-        </div>
-        <div class="stat">
-          <span class="label">Tasks done</span>
-          <span class="value">{totalDone}</span>
-        </div>
-        <div class="stat">
-          <span class="label">One-offs finished</span>
-          <span class="value">{oneOffsDone}</span>
-        </div>
-        <div class="stat">
-          <span class="label">Dollars earned</span>
-          <span class="value">${totalEarned}</span>
-        </div>
-        <div class="stat">
-          <span class="label">Bonuses earned</span>
-          <span class="value">${totalBonuses}</span>
-        </div>
-      </div>
-
-      <section>
-        <h2>Cash</h2>
-        <div class="stats">
-          <div class="stat">
-            <span class="label">Balance</span>
-            <span class="value">${cash}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Earned all time</span>
-            <span class="value">${earnedAllTime}</span>
-          </div>
-        </div>
-        <button class="primary cash-out" disabled={cash <= 0} onClick={cashOut}>
-          Cash out ${Math.max(cash, 0)}
-        </button>
-        {cashOuts.length > 0 && (
-          <ul class="cash-outs">
-            {[...cashOuts].reverse().map((c) => (
-              <li>
-                <span>{formatDay(c.date)}</span>
-                <span>${c.amount}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <h2>Done per day</h2>
-        <p class="readout" aria-live="polite">
-          <strong>
-            {readout.done} of {readout.due} done
-          </strong>{' '}
-          · ${readoutMoney.earned} earned
-          {readoutMoney.bonusEarned > 0 && ` + $${readoutMoney.bonusEarned} bonus`} · {formatDay(readout.date)}
-        </p>
-        <div class="chart">
-          {perDay.map((d) => (
-            <button
-              class={`col${d.date === readout.date ? ' on' : ''}`}
-              aria-label={`${formatDay(d.date)}: ${d.done} of ${d.due} done`}
-              onPointerEnter={() => setSelected(d.date)}
-              onFocus={() => setSelected(d.date)}
-              onClick={() => setSelected(d.date)}
-            >
-              <span class="track" style={{ height: `${(d.due / maxDue) * 100}%` }}>
-                <span class="fill" style={{ height: d.due ? `${(d.done / d.due) * 100}%` : 0 }} />
-              </span>
-            </button>
-          ))}
-        </div>
-        <div class="chart-axis">
-          <span>{formatDay(perDay[0].date)}</span>
-          <span>Today</span>
-        </div>
-      </section>
-
-      {weeklyBonuses.length > 0 && (
-        <section>
-          <h2>Weekly bonuses this week</h2>
-          <table class="task-table">
-            <thead>
-              <tr>
-                <th>Plan</th>
-                <th>Bonus</th>
-                <th>Done</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weeklyBonuses.map(({ plan, week }) => (
-                <tr key={plan.id}>
-                  <td>{plan.title}</td>
-                  <td>${plan.weeklyBonus}</td>
-                  <td>
-                    {week.done} of {week.due}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      )}
+      <Stats {...props} days={days} full />
+      <Cash {...props} history />
+      <DayChart {...props} days={days} />
+      <WeeklyBonuses {...props} />
 
       <section>
         <h2>Repeating tasks</h2>
@@ -195,29 +211,6 @@ export function Analytics({ tasks, plans, log, today, cashOuts, saveCashOuts, th
             </tbody>
           </table>
         )}
-      </section>
-
-      <section>
-        <h2>Theme</h2>
-        <div class="ranges" role="group" aria-label="Theme">
-          {(Object.keys(THEMES) as Theme[]).map((t) => (
-            <button class={theme === t ? 'on' : ''} aria-pressed={theme === t} onClick={() => saveTheme(t)}>
-              {THEMES[t]}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2>Accent</h2>
-        <div class="ranges" role="group" aria-label="Accent colour">
-          {(Object.keys(ACCENTS) as Accent[]).map((a) => (
-            <button class={accent === a ? 'on' : ''} aria-pressed={accent === a} onClick={() => saveAccent(a)}>
-              <span class="swatch" style={{ background: ACCENTS[a][1] }} />
-              {ACCENTS[a][0]}
-            </button>
-          ))}
-        </div>
       </section>
     </>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
-import { Analytics, type Accent, type Theme } from './Analytics'
+import { Account, type Accent, type Theme } from './Account'
 import { useBack } from './back'
 import { toDateKey } from './dates'
 import type { CashOut, Tracking } from './money'
@@ -11,7 +11,7 @@ import { usePersisted } from './store'
 import type { Log, Task } from './tasks'
 import { Today } from './Today'
 
-const TABS = { today: 'Today', playbook: 'Playbook', analytics: 'Analytics' }
+const TABS = { today: 'Today', playbook: 'Playbook', account: 'Account' }
 
 export function App() {
   const [tab, setTab] = useState<keyof typeof TABS>('today')
@@ -91,12 +91,26 @@ export function App() {
             order={order}
             saveOrder={saveOrder}
             tracking={tracking}
+            tasks={tasks} saveTasks={saveTasks} today={today} />
+        )}
+        {tab === 'account' && (
+          <Account
+            tasks={tasks}
+            plans={plans}
+            log={log}
+            today={today}
+            cashOuts={cashOuts}
+            saveCashOuts={saveCashOuts}
+            tracking={tracking}
             saveTracking={saveTracking}
             focus={focus}
             saveFocus={saveFocus}
-            tasks={tasks} saveTasks={saveTasks} today={today} />
+            theme={theme}
+            saveTheme={saveTheme}
+            accent={accent}
+            saveAccent={saveAccent}
+          />
         )}
-        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} cashOuts={cashOuts} saveCashOuts={saveCashOuts} theme={theme} saveTheme={saveTheme} accent={accent} saveAccent={saveAccent} />}
         <button class="export" onClick={exportData}>
           Export backup
         </button>
