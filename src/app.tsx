@@ -111,10 +111,14 @@ export function App() {
             saveAccent={saveAccent}
           />
         )}
-        <button class="export" onClick={exportData}>
-          Export backup
-        </button>
-        <p class="version">Version {__BUILD__}</p>
+        {tab === 'account' && (
+          <>
+            <button class="export" onClick={exportData}>
+              Export backup
+            </button>
+            <p class="version">Version {__BUILD__}</p>
+          </>
+        )}
       </main>
 
       <nav class="tabs">
