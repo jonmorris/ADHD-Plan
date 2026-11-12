@@ -88,9 +88,11 @@ export function App() {
             saveOrder={saveOrder}
             tracking={tracking}
             saveTracking={saveTracking}
+            focus={focus}
+            saveFocus={saveFocus}
             tasks={tasks} saveTasks={saveTasks} today={today} />
         )}
-        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} cashOuts={cashOuts} saveCashOuts={saveCashOuts} theme={theme} saveTheme={saveTheme} focus={focus} saveFocus={saveFocus} />}
+        {tab === 'analytics' && <Analytics tasks={tasks} plans={plans} log={log} today={today} cashOuts={cashOuts} saveCashOuts={saveCashOuts} theme={theme} saveTheme={saveTheme} />}
         <button class="export" onClick={exportData}>
           Export backup
         </button>
