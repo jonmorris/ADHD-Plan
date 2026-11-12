@@ -18,7 +18,7 @@ import {
 } from './tasks'
 import { dayProgress, dollars, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
-import { itemIndex, type Plan } from './plans'
+import { itemIndex, swapItems, type Plan } from './plans'
 import { MAX_PRIORITIES, toggleDoNext, togglePriority, type DoNext, type Focus, type Priorities } from './priorities'
 import { remindersOn, toggleDismissed, type Dismissed, type Reminder, type ReminderType } from './reminders'
 import { TaskForm } from './TaskForm'
@@ -26,6 +26,7 @@ import { TaskForm } from './TaskForm'
 type Props = {
   tasks: Task[]
   plans: Plan[]
+  savePlans: (plans: Plan[]) => void
   tracking: Tracking
   reminders: Reminder[]
   dismissed: Dismissed
@@ -155,6 +156,7 @@ function dayLabel(date: string, today: string) {
 export function Today({
   tasks,
   plans,
+  savePlans,
   tracking,
   reminders,
   dismissed,
@@ -185,7 +187,11 @@ export function Today({
   const [showAllOf, setShowAllOf] = useState<string[]>([])
   useBack(!!editing, () => setEditing(undefined))
 
-  const sorted = sortTasks(tasks, order, itemIndex(plans))
+  // A plan's tasks follow the plan's own order (Today's reorders change the plan), so the
+  // saved order only holds the rest
+  const index = itemIndex(plans)
+  const ownOrder = (ids: string[]) => ids.filter((id) => !tasks.some((t) => t.id === id && index(t) !== undefined))
+  const sorted = sortTasks(tasks, ownOrder(order), index)
   const due = sorted.filter((t) => isDueOn(t, date, log, today))
   const daySections = sections(due, groupOrder)
   const namedSections = daySections.filter((s) => s.group)
@@ -295,9 +301,11 @@ export function Today({
     return next
   }
 
-  function moveTask(list: Task[], index: number, step: -1 | 1) {
-    const ids = sorted.map((t) => t.id)
-    saveOrder(swap(ids, list[index].id, list[index + step].id))
+  function moveTask(list: Task[], i: number, step: -1 | 1) {
+    const [a, b] = [list[i], list[i + step]]
+    const swapped = swapItems(plans, a, b)
+    if (swapped) return savePlans(swapped)
+    saveOrder(ownOrder(swap(sorted.map((t) => t.id), a.id, b.id)))
   }
 
   function moveGroup(index: number, step: -1 | 1) {
@@ -431,17 +439,6 @@ export function Today({
         {!reordering && (
           <button class="primary add" onClick={addTask}>
             + Add task
-          </button>
-        )}
-        {reordering && (order.length > 0 || groupOrder.length > 0) && (
-          <button
-            class="link"
-            onClick={() => {
-              saveOrder([])
-              saveGroupOrder([])
-            }}
-          >
-            Reset to default order
           </button>
         )}
         {due.length > 1 && (

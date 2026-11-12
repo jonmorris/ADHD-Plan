@@ -172,3 +172,18 @@ export function itemIndex(plans: Plan[]): (task: Task) => number | undefined {
     return i === -1 ? undefined : i
   }
 }
+
+// Swaps the plan items two tasks came from, so a reorder on Today becomes the plan's order.
+// Undefined unless both tasks are items of the same plan.
+export function swapItems(plans: Plan[], a: Task, b: Task): Plan[] | undefined {
+  const index = itemIndex(plans)
+  const i = index(a)
+  const j = index(b)
+  if (i === undefined || j === undefined || a.plan !== b.plan) return undefined
+  return plans.map((p) => {
+    if (p.id !== a.plan) return p
+    const items = [...p.items]
+    ;[items[i], items[j]] = [items[j], items[i]]
+    return { ...p, items }
+  })
+}
