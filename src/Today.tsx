@@ -426,7 +426,13 @@ export function Today({
         </button>
       </header>
       <p class="count">
-        {money ? `$${money.earned} of $${money.possible} earned` : `${done} of ${due.length} done`}
+        {money ? (
+          <>
+            <strong class="earned">${money.earned}</strong> of ${money.possible} earned
+          </>
+        ) : (
+          `${done} of ${due.length} done`
+        )}
         {money && money.bonusPossible > 0 && ` · Bonuses $${money.bonusEarned} of $${money.bonusPossible}`}
         {date !== today && (
           <button class="link" onClick={() => setDate(today)}>

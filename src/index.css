@@ -210,6 +210,15 @@ textarea:focus {
   text-align: center;
 }
 
+/* Dollars earned today, the headline number */
+.count .earned {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
 button.link {
   border: none;
   background: none;
@@ -338,12 +347,28 @@ button.link {
 /* A task's dollar value, in a column on the right */
 .value-pill {
   flex-shrink: 0;
-  padding: 0.15rem 0.6rem;
+  min-width: 2.75rem;
+  box-sizing: border-box;
+  padding: 0.2rem 0.75rem;
   border-radius: 1rem;
   background: var(--surface);
+  text-align: center;
   font-size: 0.85rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  transition: background 0.12s, color 0.12s;
+}
+
+/* Earned: filled with the accent */
+.tasks li.done .value-pill {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Marked ✕: kept, but greyed out */
+.tasks li.not-done .value-pill {
+  color: var(--muted);
+  opacity: 0.6;
 }
 
 .defer-space {
