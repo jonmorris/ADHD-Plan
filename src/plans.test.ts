@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseTaskLines } from './bulk'
-import { PLANS, disablePlan, enablePlan, isPlanOn, itemIndex, removeItem, renamePlan, seedPlans, updateItem } from './plans'
+import { PLANS, disablePlan, enablePlan, isPlanOn, itemIndex, removeItem, renamePlan, seedPlans, swapItems, updateItem } from './plans'
 import { sortTasks, type Task } from './tasks'
 
 const today = '2026-10-23'
@@ -151,5 +151,18 @@ describe('editing a plan', () => {
     const sorted = sortTasks(tasks, [], itemIndex([reordered]))
     expect(sorted.map((t) => t.title)).toEqual(reordered.items.map((i) => i.title))
     expect(sortTasks(tasks, [tasks[3].id], itemIndex([reordered]))[0]).toBe(tasks[3])
+  })
+
+  it("a reorder on Today swaps the plan's items, so the plan keeps it", () => {
+    const tasks = enablePlan(cleanMama, [], today)
+    const next = swapItems(plans, tasks[0], tasks[1])!.find((p) => p.id === cleanMama.id)!
+    expect(next.items.map((i) => i.title).slice(0, 2)).toEqual([cleanMama.items[1].title, cleanMama.items[0].title])
+    expect(sortTasks(tasks, [], itemIndex([next]))[0]).toBe(tasks[1])
+  })
+
+  it("tasks not from the same plan aren't swapped there", () => {
+    const tasks = enablePlan(cleanMama, [], today)
+    const own: Task = { ...tasks[1], id: 'own', plan: undefined, planItem: undefined }
+    expect(swapItems(plans, tasks[0], own)).toBeUndefined()
   })
 })

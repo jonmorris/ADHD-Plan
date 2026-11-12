@@ -62,6 +62,7 @@ export function App() {
           <Today
             tasks={tasks}
             plans={plans}
+            savePlans={savePlans}
             tracking={tracking}
             reminders={reminders}
             dismissed={dismissed}
