@@ -431,14 +431,19 @@ export function Today({
         </button>
       </header>
       <p class="count">
-        {money ? (
+        {/* Nothing can be done on a future day yet, so it shows just the way back */}
+        {!future && (
           <>
-            <strong class="earned">{usd(money.earned)}</strong> of ${money.possible} earned
+            {money ? (
+              <>
+                <strong class="earned">{usd(money.earned)}</strong> of ${money.possible} earned
+              </>
+            ) : (
+              `${done} of ${due.length} done`
+            )}
+            {money && money.bonusPossible > 0 && ` · Bonuses $${money.bonusEarned} of $${money.bonusPossible}`}
           </>
-        ) : (
-          `${done} of ${due.length} done`
         )}
-        {money && money.bonusPossible > 0 && ` · Bonuses $${money.bonusEarned} of $${money.bonusPossible}`}
         {date !== today && (
           <button class="link" onClick={() => setDate(today)}>
             Back to today
