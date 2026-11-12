@@ -309,6 +309,13 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
     <>
       <h1>Manage</h1>
 
+      <button
+        class="primary add"
+        onClick={() => setPlanDraft({ id: crypto.randomUUID(), title: '', summary: '', tips: [], items: [] })}
+      >
+        + New plan
+      </button>
+
       <h2>Plans</h2>
       <ul class="plans">
         {plans.map((plan) => (
@@ -321,12 +328,6 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
           </li>
         ))}
       </ul>
-      <button
-        class="primary add"
-        onClick={() => setPlanDraft({ id: crypto.randomUUID(), title: '', summary: '', tips: [], items: [] })}
-      >
-        + New plan
-      </button>
 
     </>
   )
