@@ -410,11 +410,6 @@ button.link {
   color: var(--muted);
 }
 
-.hint {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
 .check.s2::after {
   content: '';
   position: absolute;

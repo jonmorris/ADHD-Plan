@@ -638,8 +638,6 @@ export function Today({
         </section>
       )}
 
-      {due.length > 0 && !future && <p class="hint">Press and hold a box to mark it ✕ (didn't do it).</p>}
-
       {editing && (
         <TaskForm
           task={editing}
