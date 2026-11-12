@@ -370,7 +370,8 @@ export function Today({
           <span class="repeat">
             {describeRepeat(t.repeat, t.start, t.end, t.periodic)}
             {money && ` · $${valueOf(t)}`}
-            {source && <span class="tag">{source}</span>}
+            {/* Under its own group's heading the plan name would just repeat it */}
+            {source && !(home && source === groupOf(t)) && <span class="tag">{source}</span>}
           </span>
           {t.notes && <span class="notes">{t.notes}</span>}
         </button>
