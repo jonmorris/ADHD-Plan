@@ -67,8 +67,8 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
     savePlans(plans.map((p) => (p.id === plan.id ? plan : p)))
   }
 
-  // The plan's settings, shown and changed right on its page
-  function planSettings(plan: Plan) {
+  // The plan's settings, in its Edit form
+  function planSettings(plan: Plan, update: (plan: Plan) => void) {
     const bonusInput = (label: string, key: 'bonus' | 'weeklyBonus') => (
       <label class="field">
         {label}
@@ -80,7 +80,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
             min={0}
             step={1}
             value={plan[key] ?? 0}
-            onInput={(e) => savePlan({ ...plan, [key]: Math.max(0, Math.round(Number(e.currentTarget.value))) || undefined })}
+            onInput={(e) => update({ ...plan, [key]: Math.max(0, Math.round(Number(e.currentTarget.value))) || undefined })}
           />
         </span>
       </label>
@@ -91,7 +91,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
           <input
             type="checkbox"
             checked={!!plan.sequential}
-            onChange={(e) => savePlan({ ...plan, sequential: e.currentTarget.checked || undefined })}
+            onChange={(e) => update({ ...plan, sequential: e.currentTarget.checked || undefined })}
           />
           <span>
             Sequential
@@ -102,7 +102,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
           <input
             type="checkbox"
             checked={!!plan.dismissable}
-            onChange={(e) => savePlan({ ...plan, dismissable: e.currentTarget.checked || undefined })}
+            onChange={(e) => update({ ...plan, dismissable: e.currentTarget.checked || undefined })}
           />
           <span>
             Deferrable
@@ -194,6 +194,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
           aria-label="Summary"
           rows={3}
         />
+        {planSettings(planDraft, setPlanDraft)}
         <div class="actions">
           {!isNew && (
             <button type="button" class="danger" onClick={() => deletePlan(planDraft)}>
@@ -212,6 +213,13 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
   }
 
   if (openPlan) {
+    // The options it has on, at a glance (set in Edit)
+    const chips = [
+      openPlan.sequential && 'Sequential',
+      openPlan.dismissable && 'Deferrable',
+      showDollars && openPlan.bonus && `Daily bonus $${openPlan.bonus}`,
+      showDollars && openPlan.weeklyBonus && `Weekly bonus $${openPlan.weeklyBonus}`,
+    ].filter(Boolean)
     return (
       <article class="page">
         <div class="page-bar">
@@ -230,7 +238,13 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
           {planSwitch(openPlan)}
         </div>
         {openPlan.summary && <p>{openPlan.summary}</p>}
-        {planSettings(openPlan)}
+        {chips.length > 0 && (
+          <ul class="plan-chips">
+            {chips.map((c) => (
+              <li>{c}</li>
+            ))}
+          </ul>
+        )}
         {newTasks > 0 && (
           <p class="plan-update">
             This plan has {newTasks} task{newTasks === 1 ? '' : 's'} you don't have yet.{' '}
@@ -252,6 +266,14 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
             </button>
           )}
         </div>
+        {!reordering && (
+          <button
+            class="primary add"
+            onClick={() => setEditingItem({ id: crypto.randomUUID(), title: '', start: today, repeat: { kind: 'daily', every: 1 } })}
+          >
+            + Add task
+          </button>
+        )}
         {openPlan.items.length === 0 && <p class="empty">No tasks yet.</p>}
         <ul class="plan-items">
           {openPlan.items.map((item, i) => (
@@ -275,14 +297,6 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
             </li>
           ))}
         </ul>
-        {!reordering && (
-          <button
-            class="primary add"
-            onClick={() => setEditingItem({ id: crypto.randomUUID(), title: '', start: today, repeat: { kind: 'daily', every: 1 } })}
-          >
-            + Add task
-          </button>
-        )}
         {openPlan.source && (
           <p class="source">
             Source:{' '}
