@@ -335,6 +335,22 @@ button.link {
   color: var(--accent);
 }
 
+/* A task's dollar value, in a column on the right */
+.value-pill {
+  flex-shrink: 0;
+  padding: 0.15rem 0.6rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.defer-space {
+  flex-shrink: 0;
+  width: 2.5rem;
+}
+
 .tasks li.done .name {
   color: var(--muted);
   text-decoration: line-through;
@@ -416,7 +432,8 @@ button.link {
 }
 
 .tasks.sequential li.not-done .repeat,
-.tasks.sequential li.not-done .notes {
+.tasks.sequential li.not-done .notes,
+.tasks.sequential li.not-done .value-pill {
   display: none;
 }
 

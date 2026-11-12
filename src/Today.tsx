@@ -369,16 +369,19 @@ export function Today({
           </span>
           <span class="repeat">
             {describeRepeat(t.repeat, t.start, t.end, t.periodic)}
-            {money && ` · $${valueOf(t)}`}
             {/* Under its own group's heading the plan name would just repeat it */}
             {source && !(home && source === groupOf(t)) && <span class="tag">{source}</span>}
           </span>
           {t.notes && <span class="notes">{t.notes}</span>}
         </button>
-        {!reordering && deferrable(t) && date >= today && state !== 1 && (
+        {money && <span class="value-pill">${valueOf(t)}</span>}
+        {!reordering && deferrable(t) && date >= today && state !== 1 ? (
           <button class="defer" aria-label={`Defer ${t.title} to the next day`} onClick={() => defer(t)}>
             {DEFER}
           </button>
+        ) : (
+          // Keeps the value pill in the same column whether or not there's a → button
+          money && !reordering && <span class="defer-space" />
         )}
         {reordering && (home || top3) && (
           <MoveButtons
