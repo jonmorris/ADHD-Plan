@@ -474,8 +474,9 @@ button.link {
 .check.s2::after {
   content: '';
   position: absolute;
-  left: 0.45rem;
-  top: 0.18rem;
+  /* Places the tick's drawn shape (not its rotated box) in the middle of the square */
+  left: 0.42rem;
+  top: 0.06rem;
   width: 0.4rem;
   height: 0.8rem;
   border: solid var(--on-check);
