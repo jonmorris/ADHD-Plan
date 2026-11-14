@@ -5,7 +5,9 @@ import { MoveButtons } from './MoveButtons'
 import {
   disablePlan,
   enablePlan,
+  asOneOff,
   isPlanOn,
+  projectProgress,
   removeItem,
   renamePlan,
   updateItem,
@@ -13,7 +15,7 @@ import {
   type PlanItem,
 } from './plans'
 import { TaskForm } from './TaskForm'
-import { describeRepeat, type Task } from './tasks'
+import { describeRepeat, type Log, type Task } from './tasks'
 
 type Props = {
   plans: Plan[]
@@ -22,11 +24,12 @@ type Props = {
   saveOrder: (order: string[]) => void
   tracking: Tracking
   tasks: Task[]
+  log: Log
   saveTasks: (tasks: Task[]) => void
   today: string
 }
 
-export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, saveTasks, today }: Props) {
+export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, log, saveTasks, today }: Props) {
   const showDollars = tracking === 'dollars'
   const [openPlanId, setOpenPlanId] = useState<string>()
   const [planDraft, setPlanDraft] = useState<Plan>()
@@ -90,6 +93,17 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
         <label class="check-field">
           <input
             type="checkbox"
+            checked={!!plan.project}
+            onChange={(e) => update({ ...plan, project: e.currentTarget.checked || undefined })}
+          />
+          <span>
+            Project
+            <small>One-time tasks. Each stays done once ticked, and the project is complete when they all are.</small>
+          </span>
+        </label>
+        <label class="check-field">
+          <input
+            type="checkbox"
             checked={!!plan.sequential}
             onChange={(e) => update({ ...plan, sequential: e.currentTarget.checked || undefined })}
           />
@@ -98,6 +112,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
             <small>Show its tasks on Today one at a time, in order. The next appears once you tick or ✕ the one before.</small>
           </span>
         </label>
+        {!plan.project && (
         <label class="check-field">
           <input
             type="checkbox"
@@ -109,7 +124,8 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
             <small>Its repeating tasks get the → button on Today to push them to the next day. A deferred task doesn't count as done or not done.</small>
           </span>
         </label>
-        {showDollars && (
+        )}
+        {showDollars && !plan.project && (
           <>
             {bonusInput('Daily bonus: all its daily tasks done that day', 'bonus')}
             {bonusInput('Weekly bonus: all its weekly tasks done that week', 'weeklyBonus')}
@@ -121,12 +137,18 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
 
   function submitPlan(e: Event) {
     e.preventDefault()
-    const plan = { ...planDraft!, title: planDraft!.title.trim(), summary: planDraft!.summary.trim() }
+    const draft = { ...planDraft!, title: planDraft!.title.trim(), summary: planDraft!.summary.trim() }
+    // A project's tasks don't repeat
+    const plan = draft.project ? { ...draft, items: draft.items.map(asOneOff) } : draft
     const before = plans.find((p) => p.id === plan.id)
     if (!before) savePlans([...plans, plan])
     else {
       savePlan(plan)
-      if (before.title !== plan.title) saveTasks(renamePlan(before, plan.title, tasks))
+      let next = before.title !== plan.title ? renamePlan(before, plan.title, tasks) : tasks
+      plan.items.forEach((item, i) => {
+        if (item !== draft.items[i]) next = updateItem(plan.id, draft.items[i], item, next)
+      })
+      if (next !== tasks) saveTasks(next)
     }
     setOpenPlanId(plan.id)
     setPlanDraft(undefined)
@@ -215,7 +237,10 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
 
   if (openPlan) {
     // The options it has on, at a glance (set in Edit)
+    const progress = openPlan.project && isPlanOn(openPlan.id, tasks) ? projectProgress(openPlan, tasks, log, today) : undefined
     const chips = [
+      openPlan.project && 'Project',
+      progress && (progress.complete ? 'Complete' : `${progress.done} of ${progress.total} done`),
       openPlan.sequential && 'Sequential',
       openPlan.dismissable && 'Deferrable',
       showDollars && openPlan.bonus && `Daily bonus $${openPlan.bonus}`,
@@ -310,6 +335,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
           <TaskForm
             task={editingItem}
             showValue={showDollars}
+            oneOff={openPlan.project}
             isNew={!openPlan.items.some((i) => i.id === editingItem.id)}
             onSave={(task) => saveItem(openPlan, task)}
             onRemove={() => deleteItem(openPlan, editingItem)}

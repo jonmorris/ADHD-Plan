@@ -7,6 +7,7 @@ import {
   DISMISSED,
   dayStats,
   describeRepeat,
+  doneOn,
   isDueOn,
   nextState,
   oneAtATime,
@@ -18,7 +19,7 @@ import {
 } from './tasks'
 import { dayProgress, dollars, usd, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
-import { itemIndex, swapItems, type Plan } from './plans'
+import { itemIndex, projectProgress, swapItems, type Plan } from './plans'
 import { MAX_PRIORITIES, toggleDoNext, togglePriority, type DoNext, type Focus, type Priorities } from './priorities'
 import { remindersOn, toggleDismissed, type Dismissed, type Reminder, type ReminderType } from './reminders'
 import { TaskForm } from './TaskForm'
@@ -192,14 +193,21 @@ export function Today({
   const index = itemIndex(plans)
   const ownOrder = (ids: string[]) => ids.filter((id) => !tasks.some((t) => t.id === id && index(t) !== undefined))
   const sorted = sortTasks(tasks, ownOrder(order), index)
-  const due = sorted.filter((t) => isDueOn(t, date, log, today))
+  // A project's ticked tasks stay on the list, done, through the day the whole project is
+  // finished (counted only on the day they were done)
+  const keptDone = (t: Task) => {
+    const plan = plans.find((p) => p.project && p.id === t.plan)
+    const d = doneOn(t, log)
+    return !!plan && !!d && d < date && date <= today && !(t.removedOn && t.removedOn <= date) && !projectProgress(plan, tasks, log, addDays(date, -1)).complete
+  }
+  const due = sorted.filter((t) => isDueOn(t, date, log, today) || keptDone(t))
   const daySections = sections(due, groupOrder)
   const namedSections = daySections.filter((s) => s.group)
   const allGroups = sortGroups(
     tasks.filter((t) => !t.removedOn).map(groupOf),
     groupOrder,
   )
-  const { done } = dayStats(tasks, log, date, today)
+  const { done, due: dueCount } = dayStats(tasks, log, date, today)
   const money = tracking === 'dollars' ? dollars(tasks, plans, log, date, today) : undefined
   const future = date > today
   const dayReminders = remindersOn(reminders, dismissed, date)
@@ -439,7 +447,7 @@ export function Today({
                 <strong class="earned">{usd(money.earned)}</strong> of ${money.possible} earned
               </>
             ) : (
-              `${done} of ${due.length} done`
+              `${done} of ${dueCount} done`
             )}
             {money && money.bonusPossible > 0 && ` · Bonuses $${money.bonusEarned} of $${money.bonusPossible}`}
           </>
@@ -565,6 +573,8 @@ export function Today({
         const collapseKey = section.group || UNGROUPED
         const isCollapsed = collapsed.includes(collapseKey)
         const groupDone = section.tasks.reduce((sum, t) => sum + credit(stateOn(t, date, log)), 0)
+        const projectPlan = plans.find((p) => p.project && p.title === section.group)
+        const progress = projectPlan && projectProgress(projectPlan, tasks, log, date)
         // All the group's tasks, not just today's, so its weekly bonus can count the whole week
         const groupMoney = money && dollars(tasks.filter((t) => groupOf(t) === section.group), plans, log, date, today)
         const dailyPlan = money && plans.find((p) => p.bonus && p.title === section.group)
@@ -588,9 +598,11 @@ export function Today({
                     {dailyPlan && day && <span class="group-bonus">Day bonus ${dailyPlan.bonus}</span>}
                     {weeklyPlan && week && <span class="group-bonus">Week bonus ${weeklyPlan.weeklyBonus}</span>}
                     <span class="group-count">
-                      {groupMoney
-                        ? `${usd(groupMoney.earned)}/$${groupMoney.possible}`
-                        : `${groupDone}/${section.tasks.length}`}
+                      {progress
+                        ? `${progress.done}/${progress.total}`
+                        : groupMoney
+                          ? `${usd(groupMoney.earned)}/$${groupMoney.possible}`
+                          : `${groupDone}/${section.tasks.length}`}
                     </span>
                   </span>
                 </button>
