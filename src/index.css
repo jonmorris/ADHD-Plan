@@ -383,11 +383,6 @@ button.link {
   opacity: 1;
 }
 
-.defer-space {
-  flex-shrink: 0;
-  width: 2.5rem;
-}
-
 .tasks li.done .name {
   color: var(--muted);
   text-decoration: line-through;
@@ -463,6 +458,37 @@ button.link {
   color: var(--muted);
 }
 
+/* A task's action bar, opened by tapping its name */
+.tasks li {
+  flex-wrap: wrap;
+}
+
+.task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-basis: 100%;
+  padding: 0 0 0.75rem calc(1.6rem + 0.75rem);
+}
+
+.task-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.task-actions button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.task-actions button.on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
 /* A done or ✕ task shrinks to its name (and its value pill) */
 .tasks li.done .title,
 .tasks li.not-done .title {
@@ -474,6 +500,16 @@ button.link {
 .tasks li.not-done .repeat,
 .tasks li.not-done .notes {
   display: none;
+}
+
+/* …but shows in full while its action bar is open */
+.tasks li.open .title {
+  padding: 0.85rem 0;
+}
+
+.tasks li.open .repeat,
+.tasks li.open .notes {
+  display: block;
 }
 
 .check.s2::after {
