@@ -251,9 +251,19 @@ export function Today({
     }, 500)
   }
 
-  function openTask(task: Task) {
+  // Tapping a task's name opens its action bar in place (one at a time); tap again to close it.
+  // Keyed by list too, since a task can show in the focus list and its group.
+  const [openRow, setOpenRow] = useState<string>()
+
+  function openTask(key: string) {
     if (titleHeld.current) return void (titleHeld.current = false)
-    setEditing(task)
+    setOpenRow(openRow === key ? undefined : key)
+  }
+
+  // An action from the bar, which then closes
+  function act(fn: () => void) {
+    fn()
+    setOpenRow(undefined)
   }
 
   function tap(task: Task) {
@@ -350,8 +360,13 @@ export function Today({
   function taskRow(t: Task, i: number, list: Task[], home: boolean) {
     const state = stateOn(t, date, log)
     const source = sourceOf(t)
+    const rowKey = `${home ? 'list' : 'focus'}:${t.id}`
+    const open = openRow === rowKey && !reordering
     return (
-      <li key={t.id} class={`c-${t.repeat.kind}${state === 1 ? ' done' : state === -1 ? ' not-done' : ''}`}>
+      <li
+        key={t.id}
+        class={`c-${t.repeat.kind}${state === 1 ? ' done' : state === -1 ? ' not-done' : ''}${open ? ' open' : ''}`}
+      >
         <button
           role="checkbox"
           class={`check ${CHECK_CLASS[state]}`}
@@ -368,7 +383,8 @@ export function Today({
         <button
           class="title"
           disabled={reordering}
-          onClick={() => openTask(t)}
+          aria-expanded={open}
+          onClick={() => openTask(rowKey)}
           onPointerDown={() => startPriorityHold(t)}
           onPointerUp={() => clearTimeout(holdTimer.current)}
           onPointerLeave={() => clearTimeout(holdTimer.current)}
@@ -396,13 +412,25 @@ export function Today({
           ) : (
             <span class="value-pill">${valueOf(t)}</span>
           ))}
-        {!reordering && deferrable(t) && date >= today && state !== 1 ? (
-          <button class="defer" aria-label={`Defer ${t.title} to the next day`} onClick={() => defer(t)}>
-            {DEFER}
-          </button>
-        ) : (
-          // Keeps the value pill in the same column whether or not there's a → button
-          money && !reordering && <span class="defer-space" />
+        {open && (
+          <div class="task-actions" role="group" aria-label={`${t.title} actions`}>
+            {deferrable(t) && date >= today && state !== 1 && (
+              <button onClick={() => act(() => defer(t))}>
+                {DEFER} Defer
+              </button>
+            )}
+            {!future && (
+              <button class={state === -1 ? 'on' : ''} aria-pressed={state === -1} onClick={() => act(() => setState(t, state === -1 ? 0 : -1))}>
+                ✕ Not done
+              </button>
+            )}
+            {!future && t.allowHalf && (
+              <button class={state === 0.5 ? 'on' : ''} aria-pressed={state === 0.5} onClick={() => act(() => setState(t, state === 0.5 ? 0 : 0.5))}>
+                ½ Half done
+              </button>
+            )}
+            <button onClick={() => act(() => setEditing(t))}>Edit</button>
+          </div>
         )}
         {reordering && (home || top3) && (
           <MoveButtons
