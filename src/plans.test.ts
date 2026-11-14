@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseTaskLines } from './bulk'
-import { PLANS, disablePlan, enablePlan, isPlanOn, itemIndex, removeItem, renamePlan, seedPlans, swapItems, updateItem } from './plans'
+import { PLANS, asOneOff, disablePlan, enablePlan, isPlanOn, itemIndex, projectProgress, removeItem, renamePlan, seedPlans, swapItems, updateItem } from './plans'
 import { sortTasks, type Task } from './tasks'
 
 const today = '2026-10-23'
@@ -183,5 +183,22 @@ describe('ordering with several plans on', () => {
         expect(got).toEqual(plan.items.map((i) => i.id).filter((id) => got.includes(id)))
       }
     }
+  })
+})
+
+describe('projects', () => {
+  const project = { id: 'proj', title: 'Garage', summary: '', tips: [], items: [], project: true }
+  const t = (id: string, extra: Partial<Task> = {}): Task => ({ id, title: id, start: today, repeat: { kind: 'none' }, plan: 'proj', ...extra })
+
+  it('counts tasks done by the day and is complete when all are', () => {
+    const tasks = [t('a'), t('b'), t('gone', { removedOn: today })]
+    const log = { [today]: { a: 1 as const }, '2026-10-24': { b: 1 as const } }
+    expect(projectProgress(project, tasks, log, today)).toEqual({ done: 1, total: 2, complete: false })
+    expect(projectProgress(project, tasks, log, '2026-10-24')).toEqual({ done: 2, total: 2, complete: true })
+  })
+
+  it('turns a repeating item into a one-time one', () => {
+    const item = { id: 'i', title: 'Sweep', start: today, repeat: { kind: 'daily' as const, every: 1 }, end: '2026-12-01', periodic: true }
+    expect(asOneOff(item)).toEqual({ id: 'i', title: 'Sweep', start: today, repeat: { kind: 'none' }, end: undefined, periodic: undefined })
   })
 })

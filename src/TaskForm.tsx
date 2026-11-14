@@ -12,6 +12,7 @@ type Props = {
   task: Task
   groups?: string[] // no Group field without these (plan items take their plan's group)
   showValue?: boolean // dollar value field, for plan items when tracking dollars
+  oneOff?: boolean // a project's item: no repeat options
   isNew: boolean
   isReminder?: boolean // editing a reminder: title, notes and schedule only
   canBeReminder?: boolean // show the Task / Reminder switch (new items on Today)
@@ -23,7 +24,7 @@ type Props = {
 
 const NEW_GROUP = '\u0000new'
 
-export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeReminder, reminderType, onSave, onRemove, onClose }: Props) {
+export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, canBeReminder, reminderType, onSave, onRemove, onClose }: Props) {
   const [reminder, setReminder] = useState(!!isReminder)
   const [type, setType] = useState<ReminderType>(reminderType ?? 'reminder')
   const [title, setTitle] = useState(task.title)
@@ -38,7 +39,7 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
   const [penalty, setPenalty] = useState(task.penalty ?? value)
   const [group, setGroup] = useState(groupOf(task))
   const [newGroup, setNewGroup] = useState('')
-  const [kind, setKind] = useState<Repeat['kind']>(task.repeat.kind)
+  const [kind, setKind] = useState<Repeat['kind']>(oneOff ? 'none' : task.repeat.kind)
   const [every, setEvery] = useState(task.repeat.kind === 'none' ? 1 : task.repeat.every)
   const [days, setDays] = useState(
     task.repeat.kind === 'weekly' ? task.repeat.days : [fromDateKey(task.start).getDay()],
@@ -111,6 +112,7 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
           <input type="date" value={start} onInput={(e) => setStart(e.currentTarget.value)} required />
         </label>
 
+        {!oneOff && (
         <label class="field">
           Repeat
           <select value={kind} onChange={(e) => setKind(e.currentTarget.value as Repeat['kind'])}>
@@ -121,6 +123,7 @@ export function TaskForm({ task, groups, showValue, isNew, isReminder, canBeRemi
             <option value="yearly">Yearly</option>
           </select>
         </label>
+        )}
 
         {kind !== 'none' && (
           <label class="field inline">

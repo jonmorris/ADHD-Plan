@@ -2,7 +2,7 @@
 // The built-in ones below are copied into the user's saved plans the first time the app runs,
 // after which they can be edited like any plan. Their task lines use the Playbook page format (see bulk.ts).
 import { parseTaskLines } from './bulk'
-import type { Task } from './tasks'
+import { doneOn, type Log, type Task } from './tasks'
 
 // A plan item is the task it adds, minus what the plan decides (plan, source, group).
 export type PlanItem = Pick<Task, 'id' | 'title' | 'start' | 'repeat' | 'end' | 'notes' | 'allowHalf' | 'value' | 'penalty' | 'periodic'>
@@ -18,6 +18,7 @@ export type Plan = {
   dismissable?: boolean // "Deferrable": its repeating tasks can be deferred (skipped for the day) on Today
   bonus?: number // dollars earned on a day when all its daily tasks are done
   weeklyBonus?: number // dollars earned when all its weekly tasks in a week are done
+  project?: boolean // one-time tasks: each stays done, and the plan is complete when all are
 }
 
 type BuiltInPlan = Omit<Plan, 'items'> & { body: string }
@@ -171,6 +172,21 @@ export function itemIndex(plans: Plan[]): (task: Task) => number | undefined {
     const i = plan ? plan.items.findIndex((item) => isFrom(task, plan.id, item)) : -1
     return i === -1 ? undefined : i
   }
+}
+
+// A project's tasks on the list by `key`: how many there are and how many are done.
+export function projectProgress(plan: Plan, tasks: Task[], log: Log, key: string) {
+  const own = tasks.filter((t) => t.plan === plan.id && !(t.removedOn && t.removedOn <= key))
+  const done = own.filter((t) => {
+    const d = doneOn(t, log)
+    return d !== undefined && d <= key
+  }).length
+  return { done, total: own.length, complete: own.length > 0 && done === own.length }
+}
+
+// Project items don't repeat.
+export function asOneOff(item: PlanItem): PlanItem {
+  return item.repeat.kind === 'none' ? item : { ...item, repeat: { kind: 'none' }, end: undefined, periodic: undefined }
 }
 
 // Swaps the plan items two tasks came from, so a reorder on Today becomes the plan's order.

@@ -92,7 +92,9 @@ export function App() {
             order={order}
             saveOrder={saveOrder}
             tracking={tracking}
-            tasks={tasks} saveTasks={saveTasks} today={today} />
+            tasks={tasks}
+            log={log}
+            saveTasks={saveTasks} today={today} />
         )}
         {tab === 'account' && (
           <Account
