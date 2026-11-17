@@ -278,11 +278,11 @@ export function Today({
     setState(task, nextState(stateOn(task, date, log), !!task.allowHalf))
   }
 
-  function save(task: Task, asReminder: boolean, reminderType: ReminderType) {
+  function save(task: Task, asReminder: boolean, reminderType: ReminderType, persistent: boolean) {
     if (asReminder) {
       const { id, title, notes, start, repeat, end } = task
       const type = reminderType === 'reminder' ? undefined : reminderType
-      const reminder: Reminder = { id, title, notes, start, repeat, end, type }
+      const reminder: Reminder = { id, title, notes, start, repeat, end, type, persistent: persistent || undefined }
       const known = reminders.some((r) => r.id === id)
       saveReminders(known ? reminders.map((r) => (r.id === id ? reminder : r)) : [...reminders, reminder])
       return setEditing(undefined)
@@ -708,6 +708,7 @@ export function Today({
           isNew={!(editingReminder ? reminders : tasks).some((t) => t.id === editing.id)}
           isReminder={editingReminder}
           reminderType={editingReminder ? reminders.find((r) => r.id === editing.id)?.type : undefined}
+          reminderPersistent={editingReminder && reminders.find((r) => r.id === editing.id)?.persistent}
           canBeReminder={!editingReminder && !tasks.some((t) => t.id === editing.id)}
           onSave={save}
           onRemove={() => remove(editing)}

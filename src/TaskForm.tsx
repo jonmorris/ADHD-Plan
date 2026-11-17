@@ -17,16 +17,18 @@ type Props = {
   isReminder?: boolean // editing a reminder: title, notes and schedule only
   canBeReminder?: boolean // show the Task / Reminder switch (new items on Today)
   reminderType?: ReminderType
-  onSave: (task: Task, asReminder: boolean, reminderType: ReminderType) => void
+  reminderPersistent?: boolean
+  onSave: (task: Task, asReminder: boolean, reminderType: ReminderType, persistent: boolean) => void
   onRemove: () => void
   onClose: () => void
 }
 
 const NEW_GROUP = '\u0000new'
 
-export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, canBeReminder, reminderType, onSave, onRemove, onClose }: Props) {
+export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, canBeReminder, reminderType, reminderPersistent, onSave, onRemove, onClose }: Props) {
   const [reminder, setReminder] = useState(!!isReminder)
   const [type, setType] = useState<ReminderType>(reminderType ?? 'reminder')
+  const [persistent, setPersistent] = useState(!!reminderPersistent)
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
@@ -62,7 +64,7 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
       // Only Dollars mode shows the penalty; otherwise it's kept as it was
       penalty: showValue ? (penaltyOn && !reminder ? penalty : undefined) : task.penalty,
       ...(groups && { group: group === NEW_GROUP ? newGroup.trim() : group }),
-    }, reminder, type)
+    }, reminder, type, persistent)
   }
 
   function toggleDay(day: number) {
@@ -174,6 +176,16 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
                   Clear
                 </button>
               )}
+            </span>
+          </label>
+        )}
+
+        {reminder && (
+          <label class="check-field">
+            <input type="checkbox" checked={persistent} onChange={(e) => setPersistent(e.currentTarget.checked)} />
+            <span>
+              Keep until dismissed
+              <small>Shows every day from its date until you dismiss it</small>
             </span>
           </label>
         )}
