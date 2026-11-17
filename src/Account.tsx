@@ -90,7 +90,7 @@ export function Account(props: Props) {
       <section>
         <h2>Settings</h2>
         <Choice label="Track" options={{ count: 'Count', dollars: 'Dollars' }} value={tracking} save={saveTracking} />
-        <Choice label="Focus" options={{ doNext: 'Do next', top3: 'Top 3' }} value={focus} save={saveFocus} />
+        <Choice label="Focus" options={{ doNext: 'Do next', top3: 'Top 3', all: 'Unlimited' }} value={focus} save={saveFocus} />
         <Choice label="Theme" options={THEMES} value={theme} save={saveTheme} />
         <Choice
           label="Accent"

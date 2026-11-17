@@ -20,7 +20,7 @@ import {
 import { dayProgress, dollars, usd, valueOf, weekProgress, type Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import { itemIndex, projectProgress, swapItems, type Plan } from './plans'
-import { MAX_PRIORITIES, toggleDoNext, togglePriority, type DoNext, type Focus, type Priorities } from './priorities'
+import { carryOver, doNextOn, MAX_PRIORITIES, toggleDoNext, togglePriority, type DoNext, type Focus, type Priorities } from './priorities'
 import { remindersOn, toggleDismissed, type Dismissed, type Reminder, type ReminderType } from './reminders'
 import { TaskForm } from './TaskForm'
 
@@ -212,10 +212,17 @@ export function Today({
   const future = date > today
   const dayReminders = remindersOn(reminders, dismissed, date)
   const remindersCollapsed = collapsed.includes(REMINDERS)
-  const dayPriorities = priorities[date] ?? []
-  // The focus list: up to three priorities, or (by default) a single task to do next
-  const top3 = focus === 'top3'
-  const focusIds = top3 ? dayPriorities : doNext[date] ? [doNext[date]] : []
+  // Unfinished priorities (and the do-next task) carry over to the next day
+  const isDone = (id: string, day: string) => {
+    const t = tasks.find((t) => t.id === id)
+    return !t || stateOn(t, day, log) === 1
+  }
+  const dayPriorities = carryOver(priorities, date, isDone)
+  const dayDoNext = doNextOn(doNext, date, isDone)
+  // The focus list: priorities (up to three, or any number), or (by default) a single task to do next
+  const top3 = focus !== 'doNext'
+  const maxPriorities = focus === 'top3' ? MAX_PRIORITIES : Infinity
+  const focusIds = top3 ? dayPriorities : dayDoNext ? [dayDoNext] : []
   const focusTasks = focusIds.flatMap((id) => due.filter((t) => t.id === id))
   const prioritiesCollapsed = collapsed.includes(PRIORITIES)
   const [priorityNote, setPriorityNote] = useState('')
@@ -243,8 +250,8 @@ export function Today({
     titleHeld.current = false
     holdTimer.current = window.setTimeout(() => {
       titleHeld.current = true
-      if (!top3) return saveDoNext(toggleDoNext(doNext, date, task.id))
-      const next = togglePriority(priorities, date, task.id)
+      if (!top3) return saveDoNext(toggleDoNext(doNext, date, task.id, dayDoNext))
+      const next = togglePriority(priorities, date, task.id, dayPriorities, maxPriorities)
       if (next) return savePriorities(next)
       setPriorityNote(`You already have ${MAX_PRIORITIES} priorities. Hold one to remove it first.`)
       window.setTimeout(() => setPriorityNote(''), 4000)
@@ -344,9 +351,7 @@ export function Today({
   function clearDone() {
     const done = focusDone.map((t) => t.id)
     if (top3) return savePriorities({ ...priorities, [date]: dayPriorities.filter((id) => !done.includes(id)) })
-    const next = { ...doNext }
-    delete next[date]
-    saveDoNext(next)
+    saveDoNext({ ...doNext, [date]: '' })
   }
 
   // Priorities are reordered within the day's priority list, not in the home groups
@@ -559,7 +564,8 @@ export function Today({
               {top3 ? 'Priorities' : 'Do next'}
               {top3 && (
                 <span class="group-count">
-                  {focusTasks.length}/{MAX_PRIORITIES}
+                  {focusTasks.length}
+                  {focus === 'top3' && `/${MAX_PRIORITIES}`}
                 </span>
               )}
             </button>
