@@ -33,3 +33,23 @@ describe('reminders', () => {
     expect(remindersOn(all, toggleDismissed(dismissed, day, 'a'), day).dismissed).toEqual([])
   })
 })
+
+describe('kept until dismissed', () => {
+  it('shows a one-off reminder every day from its date until a day it is dismissed', () => {
+    const r = reminder('r', { persistent: true })
+    expect(isReminderOn(r, '2026-11-05')).toBe(false)
+    expect(isReminderOn(r, '2026-11-09')).toBe(true)
+    const dismissed = { '2026-11-08': ['r'] }
+    expect(remindersOn([r], dismissed, '2026-11-08').dismissed).toEqual([r])
+    expect(isReminderOn(r, '2026-11-09', dismissed)).toBe(false)
+  })
+
+  it('brings a repeating one back on its next day', () => {
+    const r = reminder('r', { persistent: true, repeat: { kind: 'weekly', every: 1, days: [5] } })
+    const dismissed = { '2026-11-07': ['r'] }
+    expect(isReminderOn(r, '2026-11-07')).toBe(true)
+    expect(isReminderOn(r, '2026-11-10', dismissed)).toBe(false)
+    expect(isReminderOn(r, '2026-11-13', dismissed)).toBe(true)
+    expect(isReminderOn(r, '2026-11-15', dismissed)).toBe(true)
+  })
+})
