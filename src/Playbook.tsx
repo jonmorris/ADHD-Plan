@@ -138,6 +138,10 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
   function submitPlan(e: Event) {
     e.preventDefault()
     const draft = { ...planDraft!, title: planDraft!.title.trim(), summary: planDraft!.summary.trim() }
+    // Plan names are group names, so they must be unique (ignoring case)
+    if (plans.some((p) => p.id !== draft.id && p.title.trim().toLowerCase() === draft.title.toLowerCase())) {
+      return alert(`There's already a plan called ${draft.title}.`)
+    }
     // A project's tasks don't repeat
     const plan = draft.project ? { ...draft, items: draft.items.map(asOneOff) } : draft
     const before = plans.find((p) => p.id === plan.id)

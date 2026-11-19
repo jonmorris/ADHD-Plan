@@ -63,7 +63,13 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
       value: value === 1 ? undefined : value,
       // Only Dollars mode shows the penalty; otherwise it's kept as it was
       penalty: showValue ? (penaltyOn && !reminder ? penalty : undefined) : task.penalty,
-      ...(groups && { group: group === NEW_GROUP ? newGroup.trim() : group }),
+      // A "new" group with an existing group's name (ignoring case) is that group
+      ...(groups && {
+        group:
+          group === NEW_GROUP
+            ? (groups.find((g) => g.toLowerCase() === newGroup.trim().toLowerCase()) ?? newGroup.trim())
+            : group,
+      }),
     }, reminder, type, persistent)
   }
 

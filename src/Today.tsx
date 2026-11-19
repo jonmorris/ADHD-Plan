@@ -704,7 +704,11 @@ export function Today({
       {editing && (
         <TaskForm
           task={editing}
-          groups={allGroups}
+          groups={sortGroups(
+            // Every plan, on or off, plus any other groups (one entry per name, ignoring case)
+            [...plans.map((p) => p.title), ...allGroups.filter((g) => !plans.some((p) => p.title.toLowerCase() === g.toLowerCase()))],
+            groupOrder,
+          )}
           isNew={!(editingReminder ? reminders : tasks).some((t) => t.id === editing.id)}
           isReminder={editingReminder}
           reminderType={editingReminder ? reminders.find((r) => r.id === editing.id)?.type : undefined}

@@ -4,7 +4,7 @@ import { useBack } from './back'
 import { toDateKey } from './dates'
 import type { CashOut, Tracking } from './money'
 import { Playbook } from './Playbook'
-import { seedPlans, type Plan } from './plans'
+import { adoptIntoPlans, seedPlans, type Plan } from './plans'
 import type { DoNext, Focus, Priorities } from './priorities'
 import type { Dismissed, Reminder } from './reminders'
 import { usePersisted } from './store'
@@ -43,6 +43,15 @@ export function App() {
   useEffect(() => {
     if (accent) document.documentElement.dataset.accent = accent
   }, [accent])
+
+  // Every group is a plan in Manage: tasks put in a group from Today join (or make) its plan
+  useEffect(() => {
+    if (!tasks || !plans) return
+    const adopted = adoptIntoPlans(plans, tasks)
+    if (!adopted) return
+    savePlans(adopted.plans)
+    saveTasks(adopted.tasks)
+  }, [tasks, plans])
 
   if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme || !focus || !doNext || !cashOuts || !accent) return null
 

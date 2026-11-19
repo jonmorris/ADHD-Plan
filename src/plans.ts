@@ -174,6 +174,27 @@ export function itemIndex(plans: Plan[]): (task: Task) => number | undefined {
   }
 }
 
+// Plans and groups are the same thing: a task given a group that isn't from a plan joins the
+// plan of that name (matched ignoring case), which is made if there isn't one yet. Undefined
+// when nothing needed adopting.
+export function adoptIntoPlans(plans: Plan[], tasks: Task[]): { plans: Plan[]; tasks: Task[] } | undefined {
+  let next = plans
+  let changed = false
+  const adopted = tasks.map((t) => {
+    const name = t.group?.trim()
+    if (t.plan || t.removedOn || !name) return t
+    const found = next.find((p) => p.title.trim().toLowerCase() === name.toLowerCase())
+    const plan = found ?? { id: crypto.randomUUID(), title: name, summary: '', tips: [], items: [] }
+    const { title, start, repeat, end, notes, allowHalf, value, penalty, periodic } = t
+    const item: PlanItem = { id: crypto.randomUUID(), title, start, repeat, end, notes, allowHalf, value, penalty, periodic }
+    const grown = { ...plan, items: [...plan.items, item] }
+    next = found ? next.map((p) => (p.id === plan.id ? grown : p)) : [...next, grown]
+    changed = true
+    return { ...t, plan: plan.id, planItem: item.id, source: plan.title, group: plan.title }
+  })
+  return changed ? { plans: next, tasks: adopted } : undefined
+}
+
 // A project's tasks on the list by `key`: how many there are and how many are done.
 export function projectProgress(plan: Plan, tasks: Task[], log: Log, key: string) {
   const own = tasks.filter((t) => t.plan === plan.id && !(t.removedOn && t.removedOn <= key))

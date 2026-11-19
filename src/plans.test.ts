@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseTaskLines } from './bulk'
-import { PLANS, asOneOff, disablePlan, enablePlan, isPlanOn, itemIndex, projectProgress, removeItem, renamePlan, seedPlans, swapItems, updateItem } from './plans'
+import { PLANS, adoptIntoPlans, asOneOff, disablePlan, enablePlan, isPlanOn, itemIndex, projectProgress, removeItem, renamePlan, seedPlans, swapItems, updateItem } from './plans'
 import { sortTasks, type Task } from './tasks'
 
 const today = '2026-10-23'
@@ -200,5 +200,27 @@ describe('projects', () => {
   it('turns a repeating item into a one-time one', () => {
     const item = { id: 'i', title: 'Sweep', start: today, repeat: { kind: 'daily' as const, every: 1 }, end: '2026-12-01', periodic: true }
     expect(asOneOff(item)).toEqual({ id: 'i', title: 'Sweep', start: today, repeat: { kind: 'none' }, end: undefined, periodic: undefined })
+  })
+})
+
+describe('groups are plans', () => {
+  const own = (id: string, group?: string, extra: Partial<Task> = {}): Task => ({ id, title: id, start: today, repeat: { kind: 'daily', every: 1 }, group, ...extra })
+  const empty = { id: 'h', title: 'House Jobs', summary: '', tips: [], items: [] }
+
+  it('puts a task given an existing group into that plan, ignoring case', () => {
+    const { plans: next, tasks } = adoptIntoPlans([empty], [own('a', 'house jobs')])!
+    expect(next).toHaveLength(1)
+    expect(next[0].items.map((i) => i.title)).toEqual(['a'])
+    expect(tasks[0]).toMatchObject({ plan: 'h', group: 'House Jobs', source: 'House Jobs', planItem: next[0].items[0].id })
+  })
+
+  it('makes a plan for a new group, once', () => {
+    const { plans: next, tasks } = adoptIntoPlans([], [own('a', 'Garage'), own('b', 'garage')])!
+    expect(next.map((p) => [p.title, p.items.length])).toEqual([['Garage', 2]])
+    expect(tasks.every((t) => t.plan === next[0].id)).toBe(true)
+  })
+
+  it('leaves ungrouped, removed and plan tasks alone', () => {
+    expect(adoptIntoPlans([empty], [own('a'), own('b', 'x', { removedOn: today }), own('c', 'House Jobs', { plan: 'h' })])).toBeUndefined()
   })
 })
