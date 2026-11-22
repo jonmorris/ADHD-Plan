@@ -212,13 +212,15 @@ export function Today({
   const future = date > today
   const dayReminders = remindersOn(reminders, dismissed, date)
   const remindersCollapsed = collapsed.includes(REMINDERS)
-  // Unfinished priorities (and the do-next task) carry over to the next day
-  const isDone = (id: string, day: string) => {
+  // Unfinished priorities (and the do-next task) carry over to the next day: your own tasks and
+  // project tasks do; tasks from a routine plan don't (they come round again anyway)
+  const dropsOut = (id: string, day: string) => {
     const t = tasks.find((t) => t.id === id)
-    return !t || stateOn(t, day, log) === 1
+    const plan = t?.plan && plans.find((p) => p.id === t.plan)
+    return !t || (!!plan && !plan.project) || stateOn(t, day, log) === 1
   }
-  const dayPriorities = carryOver(priorities, date, isDone)
-  const dayDoNext = doNextOn(doNext, date, isDone)
+  const dayPriorities = carryOver(priorities, date, dropsOut)
+  const dayDoNext = doNextOn(doNext, date, dropsOut)
   // The focus list: priorities (up to three, or any number), or (by default) a single task to do next
   const top3 = focus !== 'doNext'
   const maxPriorities = focus === 'top3' ? MAX_PRIORITIES : Infinity
