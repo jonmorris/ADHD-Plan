@@ -44,6 +44,12 @@ An empty, switched-off plan couldn't be picked on Today, so a second group was m
 different case, and it never appeared in Manage. Groups and plans are now one thing: every plan is offered
 on Today, a group made on Today becomes a plan, and names are unique ignoring case.
 
+## Abandon a task from its action bar
+
+The owner wanted a quick way to delete a task without opening its form. **Abandon** joins the action bar:
+after a confirm, the task leaves the list from today on, and its history stays (the same as Remove in the
+form). The name is provisional.
+
 ## Decision log
 
 Decisions are indexed one line each in DECISION-LOG.md. Pending entries are separate files in

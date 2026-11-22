@@ -311,10 +311,16 @@ export function Today({
       saveReminders(reminders.map((r) => (r.id === task.id ? { ...r, removedOn: today } : r)))
       return setEditing(undefined)
     }
-    if (!confirm(`Remove "${task.title}"? Its history stays in Analytics.`)) return
+    if (abandon(task, 'Remove')) setEditing(undefined)
+  }
+
+  // Takes a task off the list from today on (Abandon in its action bar, Remove in its form).
+  // Its history stays.
+  function abandon(task: Task, verb = 'Abandon'): boolean {
+    if (!confirm(`${verb} "${task.title}"? It leaves your list from today. Its history stays in Analytics.`)) return false
     // A removed plan task stays removed if the plan is turned off and on again
     saveTasks(tasks.map((t) => (t.id === task.id ? { ...t, removedOn: today, dismissed: !!t.plan || undefined } : t)))
-    setEditing(undefined)
+    return true
   }
 
   // Swap two items in a full ordering, so the order of everything not shown today is kept.
@@ -435,6 +441,9 @@ export function Today({
               </button>
             )}
             <button onClick={() => act(() => setEditing(t))}>Edit</button>
+            <button class="danger" onClick={() => act(() => abandon(t))}>
+              Abandon
+            </button>
           </div>
         )}
         {reordering && (home || top3) && (
