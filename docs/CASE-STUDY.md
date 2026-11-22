@@ -108,7 +108,7 @@ Decisions shaped by one-handed, glanceable use:
 
 - **Hold** a checkbox for ✕ (not done); hold a name to make it a priority.
 - **Tap** a task to open an **action bar in place** (Defer, Not done, Half done, Edit) instead of a full
-  form; a modal was judged too heavy (14 November). **Abandon** joined it on 22 November, to delete a task
+  form; a modal was judged too heavy (14 November). **Drop** joined it on 22 November, to delete a task
   without opening its form.
 - **Done and ✕ tasks shrink** to one line (12 November); the dollar value is a pill in a fixed column that
   fills with the accent colour when earned.
@@ -181,4 +181,4 @@ stood in for checking on the device.
 | Date | Module | Change |
 |---|---|---|
 | 2026-11-19 | All | First draft from git history and the decision log |
-| 2026-11-22 | 7. Designing for a phone | Abandon added to the action bar |
+| 2026-11-22 | 7. Designing for a phone | Drop added to the action bar |
