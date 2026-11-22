@@ -1233,3 +1233,10 @@ section h2 {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+/* Under the Tasks group when the backlog holds some back */
+.backlog-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
