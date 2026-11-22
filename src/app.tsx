@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks'
 import { Account, type Accent, type Theme } from './Account'
 import { useBack } from './back'
+import { DEFAULT_BACKLOG, type Backlog } from './backlog'
 import { toDateKey } from './dates'
 import type { CashOut, Tracking } from './money'
 import { Playbook } from './Playbook'
@@ -34,6 +35,7 @@ export function App() {
   const [focus, saveFocus] = usePersisted<Focus>('focus', 'doNext')
   const [doNext, saveDoNext] = usePersisted<DoNext>('doNext', {})
   const [cashOuts, saveCashOuts] = usePersisted<CashOut[]>('cashOuts', [])
+  const [backlog, saveBacklog] = usePersisted<Backlog>('backlog', DEFAULT_BACKLOG)
   const [theme, saveTheme] = usePersisted<Theme>('theme', 'system')
   useEffect(() => {
     if (theme === 'system' || !theme) delete document.documentElement.dataset.theme
@@ -53,7 +55,7 @@ export function App() {
     saveTasks(adopted.tasks)
   }, [tasks, plans])
 
-  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme || !focus || !doNext || !cashOuts || !accent) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme || !focus || !doNext || !cashOuts || !backlog || !accent) return null
 
   function exportData() {
     const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, priorities, doNext, cashOuts, order, groupOrder }, null, 2)], { type: 'application/json' })
@@ -92,6 +94,7 @@ export function App() {
             saveDismissed={saveDismissed}
             savePriorities={savePriorities}
             saveDoNext={saveDoNext}
+            backlog={backlog}
           />
         )}
         {tab === 'playbook' && (
@@ -103,6 +106,8 @@ export function App() {
             tracking={tracking}
             tasks={tasks}
             log={log}
+            backlog={backlog}
+            saveBacklog={saveBacklog}
             saveTasks={saveTasks} today={today} />
         )}
         {tab === 'account' && (

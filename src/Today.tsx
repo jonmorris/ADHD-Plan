@@ -1,5 +1,6 @@
 import { useRef, useState } from 'preact/hooks'
 import { useBack } from './back'
+import { hiddenByBacklog, inBacklog, type Backlog } from './backlog'
 import { addDays, fromDateKey, weekNumber } from './dates'
 import { groupOf, sections, sortGroups, sourceOf } from './groups'
 import {
@@ -48,6 +49,7 @@ type Props = {
   saveDismissed: (dismissed: Dismissed) => void
   savePriorities: (priorities: Priorities) => void
   saveDoNext: (doNext: DoNext) => void
+  backlog: Backlog
 }
 
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
@@ -178,6 +180,7 @@ export function Today({
   saveDismissed,
   savePriorities,
   saveDoNext,
+  backlog,
 }: Props) {
   const [date, setDate] = useState(today)
   const [editing, setEditing] = useState<Task>()
@@ -200,15 +203,20 @@ export function Today({
     const d = doneOn(t, log)
     return !!plan && !!d && d < date && date <= today && !(t.removedOn && t.removedOn <= date) && !projectProgress(plan, tasks, log, addDays(date, -1)).complete
   }
-  const due = sorted.filter((t) => isDueOn(t, date, log, today) || keptDone(t))
+  const dueAll = sorted.filter((t) => isDueOn(t, date, log, today) || keptDone(t))
+  // With the backlog on, only the first few of your own one-off tasks show; the rest wait, and
+  // don't count toward the day
+  const backlogged = hiddenByBacklog(dueAll, backlog)
+  const due = dueAll.filter((t) => !backlogged.has(t.id))
+  const counted = backlogged.size ? tasks.filter((t) => !backlogged.has(t.id)) : tasks
   const daySections = sections(due, groupOrder)
   const namedSections = daySections.filter((s) => s.group)
   const allGroups = sortGroups(
     tasks.filter((t) => !t.removedOn).map(groupOf),
     groupOrder,
   )
-  const { done, due: dueCount } = dayStats(tasks, log, date, today)
-  const money = tracking === 'dollars' ? dollars(tasks, plans, log, date, today) : undefined
+  const { done, due: dueCount } = dayStats(counted, log, date, today)
+  const money = tracking === 'dollars' ? dollars(counted, plans, log, date, today) : undefined
   const future = date > today
   const dayReminders = remindersOn(reminders, dismissed, date)
   const remindersCollapsed = collapsed.includes(REMINDERS)
@@ -292,7 +300,8 @@ export function Today({
     const exists = tasks.some((t) => t.id === task.id)
     saveTasks(exists ? tasks.map((t) => (t.id === task.id ? task : t)) : [...tasks, task])
     // New tasks go to the top of their list
-    if (!exists) saveOrder([task.id, ...order])
+    // With the backlog on, your own new one-off tasks join the end of the line instead
+    if (!exists) saveOrder(backlog.on && inBacklog(task) ? [...order, task.id] : [task.id, ...order])
     setEditing(undefined)
   }
 
@@ -621,7 +630,7 @@ export function Today({
         const projectPlan = plans.find((p) => p.project && p.title === section.group)
         const progress = projectPlan && projectProgress(projectPlan, tasks, log, date)
         // All the group's tasks, not just today's, so its weekly bonus can count the whole week
-        const groupMoney = money && dollars(tasks.filter((t) => groupOf(t) === section.group), plans, log, date, today)
+        const groupMoney = money && dollars(counted.filter((t) => groupOf(t) === section.group), plans, log, date, today)
         const dailyPlan = money && plans.find((p) => p.bonus && p.title === section.group)
         const day = dailyPlan && dayProgress(dailyPlan, tasks, log, date, today)
         const weeklyPlan = money && plans.find((p) => p.weeklyBonus && p.title === section.group)
@@ -673,6 +682,9 @@ export function Today({
               >
                 {showAll ? 'Show less' : `Show ${hiddenCount} more`}
               </button>
+            )}
+            {!section.group && backlogged.size > 0 && !isCollapsed && (
+              <p class="backlog-note">{backlogged.size} more waiting in your backlog</p>
             )}
           </section>
         )

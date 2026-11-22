@@ -52,6 +52,15 @@ The owner wanted a quick way to delete a task without opening its form. **Drop**
 a confirm, the task leaves the list from today on, and its history stays (the same as Remove in the form).
 It was first called Abandon; the owner chose Drop as the softer name.
 
+## Backlog for your own one-off tasks
+
+The owner wanted a cap on how many of their own one-off tasks Today shows. With the limit on, Today shows
+the first few (in the saved order) and the rest wait in a Backlog page in Manage, where they can be added,
+edited and reordered. A finished task keeps its place until the next day, when the next one moves up; new
+tasks join the end of the line. It covers only the ungrouped tasks under "Tasks", not plan or project tasks,
+and the switch and number live on the Backlog page (owner's choices, 22 November). Hidden tasks don't count
+toward Today's totals; Analytics still counts every undone one-off as due.
+
 ## Decision log
 
 Decisions are indexed one line each in DECISION-LOG.md. Pending entries are separate files in

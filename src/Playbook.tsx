@@ -1,5 +1,7 @@
 import { useState } from 'preact/hooks'
 import { useBack } from './back'
+import { BacklogPage } from './Backlog'
+import { inBacklog, type Backlog } from './backlog'
 import type { Tracking } from './money'
 import { MoveButtons } from './MoveButtons'
 import {
@@ -15,7 +17,7 @@ import {
   type PlanItem,
 } from './plans'
 import { TaskForm } from './TaskForm'
-import { describeRepeat, type Log, type Task } from './tasks'
+import { describeRepeat, doneOn, type Log, type Task } from './tasks'
 
 type Props = {
   plans: Plan[]
@@ -23,18 +25,21 @@ type Props = {
   order: string[]
   saveOrder: (order: string[]) => void
   tracking: Tracking
+  backlog: Backlog
+  saveBacklog: (backlog: Backlog) => void
   tasks: Task[]
   log: Log
   saveTasks: (tasks: Task[]) => void
   today: string
 }
 
-export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, log, saveTasks, today }: Props) {
+export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog, saveBacklog, tasks, log, saveTasks, today }: Props) {
   const showDollars = tracking === 'dollars'
   const [openPlanId, setOpenPlanId] = useState<string>()
   const [planDraft, setPlanDraft] = useState<Plan>()
   const [editingItem, setEditingItem] = useState<PlanItem>()
   const [reordering, setReordering] = useState(false)
+  const [backlogOpen, setBacklogOpen] = useState(false)
 
   const openPlan = plans.find((p) => p.id === openPlanId)
   useBack(!!openPlan, () => {
@@ -42,6 +47,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
     setReordering(false)
   })
   useBack(!!planDraft, () => setPlanDraft(undefined))
+  useBack(backlogOpen, () => setBacklogOpen(false))
   useBack(!!editingItem, () => setEditingItem(undefined))
   // Items on a switched-on plan that aren't on the list (enablePlan skips ones already there or removed)
   const newTasks =
@@ -202,6 +208,22 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
     saveOrder(order.filter((id) => !tasks.some((t) => t.id === id && t.plan === plan.id)))
   }
 
+  if (backlogOpen) {
+    return (
+      <BacklogPage
+        tasks={tasks}
+        saveTasks={saveTasks}
+        order={order}
+        saveOrder={saveOrder}
+        backlog={backlog}
+        saveBacklog={saveBacklog}
+        log={log}
+        today={today}
+        onClose={() => setBacklogOpen(false)}
+      />
+    )
+  }
+
   if (planDraft) {
     const isNew = !plans.some((p) => p.id === planDraft.id)
     return (
@@ -350,6 +372,8 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
     )
   }
 
+  const waitingCount = tasks.filter((t) => inBacklog(t) && !t.removedOn && !doneOn(t, log)).length
+
   return (
     <>
       <h1>Manage</h1>
@@ -363,6 +387,15 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, tasks, 
 
       <h2>Plans</h2>
       <ul class="plans">
+        <li>
+          <button class="plan-open" onClick={() => setBacklogOpen(true)}>
+            <span class="name">Backlog</span>
+            <span class="detail">
+              {waitingCount} of your own one-off task{waitingCount === 1 ? '' : 's'}
+              {backlog.on && ` · ${backlog.limit} at a time on Today`}
+            </span>
+          </button>
+        </li>
         {plans.map((plan) => (
           <li key={plan.id}>
             <button class="plan-open" onClick={() => setOpenPlanId(plan.id)}>
