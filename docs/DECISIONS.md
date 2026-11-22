@@ -36,7 +36,9 @@ and judged a modal too heavy, so a bar opens under the row instead. The → defe
 ## Priorities carry over
 
 Unfinished priorities (and the do-next task) roll into the next day until done, and an Unlimited option
-joins Do next and Top 3. A day's own list, once changed, is kept as is.
+joins Do next and Top 3. A day's own list, once changed, is kept as is. Only your own tasks and project
+tasks carry over: the owner decided tasks from routine plans shouldn't, since they come round again
+(22 November).
 
 ## Groups are plans
 

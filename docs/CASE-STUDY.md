@@ -97,7 +97,8 @@ next day.*
 
 Priorities started as a top three held down on a task (6 November). **Do next**, a single focus task, was
 added as the alternative (8 November), then **Unlimited** joined them, and unfinished priorities now
-**carry over** to the next day (17 November). The highlight takes its colour from the chosen accent.
+**carry over** to the next day (17 November), except tasks from routine plans, which come round again
+anyway (22 November). The highlight takes its colour from the chosen accent.
 
 ## 7. Designing for a phone, used in passing
 
@@ -182,3 +183,4 @@ stood in for checking on the device.
 |---|---|---|
 | 2026-11-19 | All | First draft from git history and the decision log |
 | 2026-11-22 | 7. Designing for a phone | Drop added to the action bar |
+| 2026-11-22 | 6. Focus | Routine-plan tasks no longer carry over as priorities |
