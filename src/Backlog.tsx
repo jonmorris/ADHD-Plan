@@ -42,11 +42,11 @@ export function BacklogPage({ tasks, saveTasks, order, saveOrder, backlog, saveB
     saveOrder(ids)
   }
 
-  function save(task: Task) {
+  function save(task: Task, _asReminder: boolean, _type: unknown, _persistent: boolean, atStart: boolean) {
     const exists = tasks.some((t) => t.id === task.id)
     saveTasks(exists ? tasks.map((t) => (t.id === task.id ? task : t)) : [...tasks, task])
-    // New ones join the end of the line
-    if (!exists) saveOrder([...order.filter((id) => id !== task.id), task.id])
+    // New ones join the end of the line, or the start if the form says so
+    if (!exists) saveOrder(atStart ? [task.id, ...order] : [...order, task.id])
     setEditing(undefined)
   }
 

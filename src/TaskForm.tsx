@@ -18,7 +18,7 @@ type Props = {
   canBeReminder?: boolean // show the Task / Reminder switch (new items on Today)
   reminderType?: ReminderType
   reminderPersistent?: boolean
-  onSave: (task: Task, asReminder: boolean, reminderType: ReminderType, persistent: boolean) => void
+  onSave: (task: Task, asReminder: boolean, reminderType: ReminderType, persistent: boolean, atStart: boolean) => void
   onRemove: () => void
   onClose: () => void
 }
@@ -29,6 +29,8 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
   const [reminder, setReminder] = useState(!!isReminder)
   const [type, setType] = useState<ReminderType>(reminderType ?? 'reminder')
   const [persistent, setPersistent] = useState(!!reminderPersistent)
+  // Where a new one-off task of your own joins your list
+  const [atStart, setAtStart] = useState(false)
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes ?? '')
   const [start, setStart] = useState(task.start)
@@ -70,7 +72,7 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
             ? (groups.find((g) => g.toLowerCase() === newGroup.trim().toLowerCase()) ?? newGroup.trim())
             : group,
       }),
-    }, reminder, type, persistent)
+    }, reminder, type, persistent, atStart)
   }
 
   function toggleDay(day: number) {
@@ -131,6 +133,19 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
             <option value="yearly">Yearly</option>
           </select>
         </label>
+        )}
+
+        {isNew && !reminder && kind === 'none' && (!groups || !group) && (
+          <div class="field">
+            <span id="place-label">Add to</span>
+            <div class="ranges" role="group" aria-labelledby="place-label">
+              {[false, true].map((start) => (
+                <button type="button" class={atStart === start ? 'on' : ''} aria-pressed={atStart === start} onClick={() => setAtStart(start)}>
+                  {start ? 'Start of list' : 'End of list'}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {kind !== 'none' && (

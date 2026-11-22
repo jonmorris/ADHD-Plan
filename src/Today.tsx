@@ -288,7 +288,7 @@ export function Today({
     setState(task, nextState(stateOn(task, date, log), !!task.allowHalf))
   }
 
-  function save(task: Task, asReminder: boolean, reminderType: ReminderType, persistent: boolean) {
+  function save(task: Task, asReminder: boolean, reminderType: ReminderType, persistent: boolean, atStart: boolean) {
     if (asReminder) {
       const { id, title, notes, start, repeat, end } = task
       const type = reminderType === 'reminder' ? undefined : reminderType
@@ -299,9 +299,8 @@ export function Today({
     }
     const exists = tasks.some((t) => t.id === task.id)
     saveTasks(exists ? tasks.map((t) => (t.id === task.id ? task : t)) : [...tasks, task])
-    // New tasks go to the top of their list
-    // With the backlog on, your own new one-off tasks join the end of the line instead
-    if (!exists) saveOrder(backlog.on && inBacklog(task) ? [...order, task.id] : [task.id, ...order])
+    // Your own new one-off tasks go where the form says (end by default); other new tasks go to the top
+    if (!exists) saveOrder(inBacklog(task) && !atStart ? [...order, task.id] : [task.id, ...order])
     setEditing(undefined)
   }
 
