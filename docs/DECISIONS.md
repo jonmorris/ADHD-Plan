@@ -61,6 +61,9 @@ tasks join the end of the line. It covers only the ungrouped tasks under "Tasks"
 and the switch and number live on the Backlog page (owner's choices, 22 November). Hidden tasks don't count
 toward Today's totals; Analytics still counts every undone one-off as due.
 
+New one-off tasks of your own go to the end of the list by default, with "Start of list" as a choice in the
+form (owner's request, 22 November). Other new tasks still go to the top.
+
 ## Decision log
 
 Decisions are indexed one line each in DECISION-LOG.md. Pending entries are separate files in
