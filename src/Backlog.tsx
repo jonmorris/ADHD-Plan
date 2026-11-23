@@ -3,7 +3,7 @@ import { useBack } from './back'
 import { inBacklog, type Backlog } from './backlog'
 import { MoveButtons } from './MoveButtons'
 import { TaskForm } from './TaskForm'
-import { doneOn, sortTasks, type Log, type Task } from './tasks'
+import { byPriority, doneOn, PRIORITY_LABELS, sortTasks, type Log, type Task } from './tasks'
 
 type Props = {
   tasks: Task[]
@@ -25,9 +25,11 @@ export function BacklogPage({ tasks, saveTasks, order, saveOrder, backlog, saveB
   useBack(!!editing, () => setEditing(undefined))
 
   // Same order as Today: the saved order holds tasks that aren't from a plan
-  const own = sortTasks(
-    tasks.filter((t) => !t.plan),
-    order,
+  const own = byPriority(
+    sortTasks(
+      tasks.filter((t) => !t.plan),
+      order,
+    ),
   )
   const waiting = own.filter((t) => inBacklog(t) && !t.removedOn && !doneOn(t, log))
   // Done today still holds its place on Today until tomorrow
@@ -105,7 +107,10 @@ export function BacklogPage({ tasks, saveTasks, order, saveOrder, backlog, saveB
           <li key={t.id}>
             <button class="plan-item" disabled={reordering} onClick={() => setEditing(t)}>
               <span class="name">{t.title}</span>
-              <span class="detail">{i < onToday ? 'On Today' : 'Waiting'}</span>
+              <span class="detail">
+                {i < onToday ? 'On Today' : 'Waiting'}
+                {t.priority && ` · ${PRIORITY_LABELS[t.priority]} priority`}
+              </span>
               {t.notes && <span class="detail">{t.notes}</span>}
             </button>
             {reordering && <MoveButtons label={t.title} first={i === 0} last={i === waiting.length - 1} move={(step) => move(i, step)} />}

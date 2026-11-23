@@ -17,6 +17,7 @@ export type Task = {
   allowHalf?: boolean // tap once for half done, twice for done
   value?: number // dollars earned when done (default 1, see money.ts)
   penalty?: number // dollars taken away when marked ✕ (not done); none if unset
+  priority?: Priority // one-off tasks only; sorts higher ones first
   periodic?: boolean // repeat is the gap after each completion, on any day, not a fixed schedule
   plan?: string // id of the plan that added it
   planItem?: string // id of the plan item it came from
@@ -24,6 +25,16 @@ export type Task = {
   group?: string // '' = no group (see groups.ts)
   dismissed?: boolean // removed by the user, so turning its plan back on won't re-add it
   removedOn?: string
+}
+
+export type Priority = 'high' | 'medium' | 'low'
+export const PRIORITY_LABELS: Record<Priority, string> = { high: 'High', medium: 'Medium', low: 'Low' }
+const RANK: Record<Priority, number> = { high: 3, medium: 2, low: 1 }
+
+// High priority first, then medium, then low, then none; otherwise the order is kept.
+export function byPriority(tasks: Task[]): Task[] {
+  const rank = (t: Task) => (t.priority ? RANK[t.priority] : 0)
+  return [...tasks].sort((a, b) => rank(b) - rank(a))
 }
 
 // 0 = not done, 0.5 = half done, 1 = done, -1 = marked as not done (✗)

@@ -65,6 +65,13 @@ toward Today's totals; Analytics still counts every undone one-off as due.
 New one-off tasks of your own go to the end of the list by default, with "Start of list" as a choice in the
 form (owner's request, 22 November). Other new tasks still go to the top.
 
+## Priority levels on one-off tasks
+
+One-off tasks (your own and project tasks) can carry an optional priority: High, Medium or Low, with none
+below Low (owner's request, 23 November). Higher priorities sort first on Today and in the Backlog, ahead of
+the saved order, which still orders tasks within the same level; so the backlog's "first few" favours
+high-priority tasks. Repeating tasks have no priority. Not to be confused with the Priorities focus list.
+
 ## Decision log
 
 Decisions are indexed one line each in DECISION-LOG.md. Pending entries are separate files in

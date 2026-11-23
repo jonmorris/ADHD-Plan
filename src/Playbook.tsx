@@ -184,6 +184,7 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog
       allowHalf: task.allowHalf,
       value: task.value,
       penalty: task.penalty,
+      priority: task.priority,
       periodic: task.periodic,
     }
     const before = plan.items.find((i) => i.id === item.id)
