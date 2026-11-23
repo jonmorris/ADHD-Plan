@@ -72,8 +72,9 @@ One idea, a plan, absorbed several kinds of work:
 - **Routines** repeat on a schedule and can earn a daily or weekly bonus.
 - **Sequential** plans show one task at a time, so a routine reads as a next step, not a wall.
 - **Deferrable** plans let a repeating task be skipped for the day without counting as missed.
-- **Projects** (14 November) hold one-time tasks that stay ticked until the whole project is done, then
-  leave Today.
+- **Projects** (14 November) hold one-time tasks, with progress (2/5) on the group heading and Complete
+  on the plan once all are done. Ticked tasks first stayed on Today until the project was finished; from
+  23 November they clear the next day like any other task.
 
 The options moved once: first edited on the plan's page, then back into Edit with only the options that are
 on shown as chips (a reversal on 12 November, DECISIONS.md → Plan options set in Edit, shown as chips).
@@ -186,3 +187,4 @@ stood in for checking on the device.
 | 2026-11-22 | 7. Designing for a phone | Drop added to the action bar |
 | 2026-11-22 | 6. Focus | Routine-plan tasks no longer carry over as priorities |
 | 2026-11-22 | 6. Focus | Backlog limit for your own one-off tasks |
+| 2026-11-23 | 4. Plans | Ticked project tasks clear the next day |

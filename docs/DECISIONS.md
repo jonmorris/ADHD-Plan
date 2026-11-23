@@ -24,9 +24,10 @@ default order". The owner asked that either reorder make a lasting change.
 ## Projects
 
 Some groups are one-off projects: each task is done once and stays done until the whole project is. A
-Project plan has one-time tasks only; ticked ones stay on Today (shown done) until the last is ticked, then
-the group leaves Today and the plan shows Complete. The owner chose the plan-level option in Manage over a
-group flag on Today.
+Project plan has one-time tasks only; the group heading on Today shows progress (e.g. 2/5) and the plan shows
+Complete once every task is done. The owner chose the plan-level option in Manage over a group flag on Today.
+At first ticked project tasks stayed on Today until the whole project was done; the owner reversed that on
+23 November, so a ticked project task clears the next day like any other.
 
 ## Tap opens an action bar in place
 
