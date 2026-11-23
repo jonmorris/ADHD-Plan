@@ -32,8 +32,8 @@ export const PRIORITY_LABELS: Record<Priority, string> = { high: 'High', medium:
 const RANK: Record<Priority, number> = { high: 3, medium: 2, low: 1 }
 
 // High priority first, then medium, then low, then none; otherwise the order is kept.
-export function byPriority(tasks: Task[]): Task[] {
-  const rank = (t: Task) => (t.priority ? RANK[t.priority] : 0)
+export function byPriority<T extends { priority?: Priority }>(tasks: T[]): T[] {
+  const rank = (t: T) => (t.priority ? RANK[t.priority] : 0)
   return [...tasks].sort((a, b) => rank(b) - rank(a))
 }
 
