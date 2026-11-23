@@ -11,6 +11,8 @@ import {
   isDueOn,
   nextState,
   oneAtATime,
+  byPriority,
+  PRIORITY_LABELS,
   sortTasks,
   stateOn,
   type Log,
@@ -194,7 +196,8 @@ export function Today({
   // saved order only holds the rest
   const index = itemIndex(plans)
   const ownOrder = (ids: string[]) => ids.filter((id) => !tasks.some((t) => t.id === id && index(t) !== undefined))
-  const sorted = sortTasks(tasks, ownOrder(order), index)
+  // High-priority one-off tasks first, then the saved order
+  const sorted = byPriority(sortTasks(tasks, ownOrder(order), index))
   const dueAll = sorted.filter((t) => isDueOn(t, date, log, today))
   // With the backlog on, only the first few of your own one-off tasks show; the rest wait, and
   // don't count toward the day
@@ -414,6 +417,7 @@ export function Today({
           </span>
           <span class="repeat">
             {describeRepeat(t.repeat, t.start, t.end, t.periodic)}
+            {t.priority && <span class={`tag priority-${t.priority}`}>{PRIORITY_LABELS[t.priority]}</span>}
             {/* Under its own group's heading the plan name would just repeat it */}
             {source && !(home && source === groupOf(t)) && <span class="tag">{source}</span>}
           </span>

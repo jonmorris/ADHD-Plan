@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addPeriod, byCadence, DISMISSED, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, oneAtATime, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
+import { addPeriod, byCadence, byPriority, DISMISSED, credit, dayStats, describeRepeat, isDueOn, nextState, occursOn, oneAtATime, sortTasks, stateOn, streak, summarize, type Log, type Repeat, type Task } from './tasks'
 
 function task(repeat: Repeat, start = '2026-10-01', extra: Partial<Task> = {}): Task {
   return { id: 't', title: 'T', start, repeat, ...extra }
@@ -330,5 +330,14 @@ describe('dismissed tasks', () => {
   it("don't break a streak", () => {
     const streakLog: Log = { '2026-11-06': { l: 1 }, '2026-11-07': { l: DISMISSED }, [day]: { l: 1 } }
     expect(streak(laundry, streakLog, day)).toBe(2)
+  })
+})
+
+describe('byPriority', () => {
+  const t = (id: string, priority?: Task['priority']): Task => ({ id, title: id, start: '2026-11-23', repeat: { kind: 'none' }, priority })
+
+  it('puts high first, then medium, then low, then none, keeping the order within each', () => {
+    const tasks = [t('none1'), t('low', 'low'), t('high1', 'high'), t('none2'), t('medium', 'medium'), t('high2', 'high')]
+    expect(byPriority(tasks).map((x) => x.id)).toEqual(['high1', 'high2', 'medium', 'low', 'none1', 'none2'])
   })
 })

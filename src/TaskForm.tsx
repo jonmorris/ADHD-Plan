@@ -3,7 +3,7 @@ import { fromDateKey } from './dates'
 import { groupOf } from './groups'
 import { VALUES } from './money'
 import { REMINDER_TYPES, type ReminderType } from './reminders'
-import type { Repeat, Task } from './tasks'
+import { PRIORITY_LABELS, type Priority, type Repeat, type Task } from './tasks'
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 const UNITS = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }
@@ -41,6 +41,7 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
   // Penalty when marked ✕: off by default; when on, it starts at the task's value
   const [penaltyOn, setPenaltyOn] = useState(task.penalty !== undefined)
   const [penalty, setPenalty] = useState(task.penalty ?? value)
+  const [priority, setPriority] = useState<Priority | ''>(task.priority ?? '')
   const [group, setGroup] = useState(groupOf(task))
   const [newGroup, setNewGroup] = useState('')
   const [kind, setKind] = useState<Repeat['kind']>(oneOff ? 'none' : task.repeat.kind)
@@ -65,6 +66,8 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
       value: value === 1 ? undefined : value,
       // Only Dollars mode shows the penalty; otherwise it's kept as it was
       penalty: showValue ? (penaltyOn && !reminder ? penalty : undefined) : task.penalty,
+      // Only one-off tasks have a priority
+      priority: (kind === 'none' && !reminder && priority) || undefined,
       // A "new" group with an existing group's name (ignoring case) is that group
       ...(groups && {
         group:
@@ -133,6 +136,18 @@ export function TaskForm({ task, groups, showValue, oneOff, isNew, isReminder, c
             <option value="yearly">Yearly</option>
           </select>
         </label>
+        )}
+
+        {!reminder && kind === 'none' && (
+          <label class="field">
+            Priority
+            <select value={priority} onChange={(e) => setPriority(e.currentTarget.value as Priority | '')}>
+              <option value="">None</option>
+              {(Object.keys(PRIORITY_LABELS) as Priority[]).map((p) => (
+                <option value={p}>{PRIORITY_LABELS[p]}</option>
+              ))}
+            </select>
+          </label>
         )}
 
         {isNew && !reminder && kind === 'none' && (!groups || !group) && (

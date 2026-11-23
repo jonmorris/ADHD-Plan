@@ -1240,3 +1240,18 @@ section h2 {
   font-size: 0.85rem;
   color: var(--muted);
 }
+
+/* A one-off task's priority tag */
+.tag.priority-high,
+.tasks .title .tag.priority-high {
+  background: color-mix(in srgb, var(--danger) 16%, var(--bg));
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.tag.priority-medium,
+.tasks .title .tag.priority-medium {
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg));
+  color: var(--accent);
+  font-weight: 600;
+}

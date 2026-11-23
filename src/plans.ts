@@ -5,7 +5,7 @@ import { parseTaskLines } from './bulk'
 import { doneOn, type Log, type Task } from './tasks'
 
 // A plan item is the task it adds, minus what the plan decides (plan, source, group).
-export type PlanItem = Pick<Task, 'id' | 'title' | 'start' | 'repeat' | 'end' | 'notes' | 'allowHalf' | 'value' | 'penalty' | 'periodic'>
+export type PlanItem = Pick<Task, 'id' | 'title' | 'start' | 'repeat' | 'end' | 'notes' | 'allowHalf' | 'value' | 'penalty' | 'periodic' | 'priority'>
 
 export type Plan = {
   id: string
@@ -185,8 +185,8 @@ export function adoptIntoPlans(plans: Plan[], tasks: Task[]): { plans: Plan[]; t
     if (t.plan || t.removedOn || !name) return t
     const found = next.find((p) => p.title.trim().toLowerCase() === name.toLowerCase())
     const plan = found ?? { id: crypto.randomUUID(), title: name, summary: '', tips: [], items: [] }
-    const { title, start, repeat, end, notes, allowHalf, value, penalty, periodic } = t
-    const item: PlanItem = { id: crypto.randomUUID(), title, start, repeat, end, notes, allowHalf, value, penalty, periodic }
+    const { title, start, repeat, end, notes, allowHalf, value, penalty, periodic, priority } = t
+    const item: PlanItem = { id: crypto.randomUUID(), title, start, repeat, end, notes, allowHalf, value, penalty, periodic, priority }
     const grown = { ...plan, items: [...plan.items, item] }
     next = found ? next.map((p) => (p.id === plan.id ? grown : p)) : [...next, grown]
     changed = true
