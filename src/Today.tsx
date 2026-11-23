@@ -8,7 +8,6 @@ import {
   DISMISSED,
   dayStats,
   describeRepeat,
-  doneOn,
   isDueOn,
   nextState,
   oneAtATime,
@@ -196,14 +195,7 @@ export function Today({
   const index = itemIndex(plans)
   const ownOrder = (ids: string[]) => ids.filter((id) => !tasks.some((t) => t.id === id && index(t) !== undefined))
   const sorted = sortTasks(tasks, ownOrder(order), index)
-  // A project's ticked tasks stay on the list, done, through the day the whole project is
-  // finished (counted only on the day they were done)
-  const keptDone = (t: Task) => {
-    const plan = plans.find((p) => p.project && p.id === t.plan)
-    const d = doneOn(t, log)
-    return !!plan && !!d && d < date && date <= today && !(t.removedOn && t.removedOn <= date) && !projectProgress(plan, tasks, log, addDays(date, -1)).complete
-  }
-  const dueAll = sorted.filter((t) => isDueOn(t, date, log, today) || keptDone(t))
+  const dueAll = sorted.filter((t) => isDueOn(t, date, log, today))
   // With the backlog on, only the first few of your own one-off tasks show; the rest wait, and
   // don't count toward the day
   const backlogged = hiddenByBacklog(dueAll, backlog)
