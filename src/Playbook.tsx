@@ -17,7 +17,7 @@ import {
   type PlanItem,
 } from './plans'
 import { TaskForm } from './TaskForm'
-import { describeRepeat, doneOn, type Log, type Task } from './tasks'
+import { byPriority, describeRepeat, doneOn, PRIORITY_LABELS, type Log, type Task } from './tasks'
 
 type Props = {
   plans: Plan[]
@@ -201,9 +201,12 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog
     setEditingItem(undefined)
   }
 
-  function moveItem(plan: Plan, index: number, step: -1 | 1) {
+  // Swaps two items as listed (priority order), wherever they sit in the plan
+  function moveItem(plan: Plan, a: PlanItem, b: PlanItem) {
     const items = [...plan.items]
-    ;[items[index], items[index + step]] = [items[index + step], items[index]]
+    const i = items.indexOf(a)
+    const j = items.indexOf(b)
+    ;[items[i], items[j]] = [items[j], items[i]]
     savePlan({ ...plan, items })
     // Today's saved order would otherwise keep showing the plan's tasks the old way
     saveOrder(order.filter((id) => !tasks.some((t) => t.id === id && t.plan === plan.id)))
@@ -263,6 +266,8 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog
   }
 
   if (openPlan) {
+    // Items as Today lists them: higher priority first, then the plan's order
+    const listed = byPriority(openPlan.items)
     // The options it has on, at a glance (set in Edit)
     const progress = openPlan.project && isPlanOn(openPlan.id, tasks) ? projectProgress(openPlan, tasks, log, today) : undefined
     const chips = [
@@ -329,13 +334,14 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog
         )}
         {openPlan.items.length === 0 && <p class="empty">No tasks yet.</p>}
         <ul class="plan-items">
-          {openPlan.items.map((item, i) => (
+          {listed.map((item, i) => (
             <li key={item.id}>
               <button class="plan-item" disabled={reordering} onClick={() => setEditingItem(item)}>
                 <span class="name">{item.title}</span>
                 <span class="detail">
                   {describeRepeat(item.repeat, item.start, item.end, item.periodic)}
                   {showDollars && ` · $${item.value ?? 1}`}
+                  {item.priority && <span class={`tag priority-${item.priority}`}>{PRIORITY_LABELS[item.priority]}</span>}
                 </span>
                 {item.notes && <span class="detail">{item.notes}</span>}
               </button>
@@ -343,8 +349,8 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog
                 <MoveButtons
                   label={item.title}
                   first={i === 0}
-                  last={i === openPlan.items.length - 1}
-                  move={(step) => moveItem(openPlan, i, step)}
+                  last={i === listed.length - 1}
+                  move={(step) => moveItem(openPlan, item, listed[i + step])}
                 />
               )}
             </li>

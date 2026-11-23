@@ -989,6 +989,10 @@ button.link {
   display: block;
 }
 
+.plan-item .tag {
+  display: inline-block;
+}
+
 .plan-item .detail {
   font-size: 0.85rem;
   color: var(--muted);
