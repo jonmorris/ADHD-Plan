@@ -80,6 +80,16 @@ below Low (owner's request, 23 November). Higher priorities sort first on Today 
 the saved order, which still orders tasks within the same level; so the backlog's "first few" favours
 high-priority tasks. Repeating tasks have no priority. Not to be confused with the Priorities focus list.
 
+## A fresh install starts empty
+
+The open question from TODO.md (what a new install starts with) is settled: no built-in plans (owner's
+request, 25 November), just a **Getting started** list instead: a project, switched on, whose tasks are
+examples that teach the app (tick, tap for actions, hold for Do next, hold for ✕, add a task, make a plan,
+drop a group, theme, backup). Ticking them off completes it. Clean Mama, Morning routine, ADHD protection and Lifting stay in the code but are no
+longer offered to new installs. Anyone already using the app keeps what they have: saved plans are untouched,
+and someone with tasks, a log or reminders whose plans were never saved gets the built-in ones saved for good
+on first load, since they've been seeing them all along.
+
 ## Decision log
 
 Decisions are indexed one line each in DECISION-LOG.md. Pending entries are separate files in

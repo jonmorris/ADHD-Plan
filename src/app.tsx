@@ -1,3 +1,4 @@
+import { get } from 'idb-keyval'
 import { useEffect, useState } from 'preact/hooks'
 import { Account, type Accent, type Theme } from './Account'
 import { useBack } from './back'
@@ -6,7 +7,8 @@ import type { DroppedGroups } from './Today'
 import { toDateKey } from './dates'
 import type { CashOut, Tracking } from './money'
 import { Playbook } from './Playbook'
-import { adoptIntoPlans, seedPlans, type Plan } from './plans'
+import { onboardingPlan } from './onboarding'
+import { adoptIntoPlans, enablePlan, seedPlans, type Plan } from './plans'
 import type { DoNext, Focus, Priorities } from './priorities'
 import type { Dismissed, Reminder } from './reminders'
 import { usePersisted } from './store'
@@ -47,6 +49,20 @@ export function App() {
   useEffect(() => {
     if (accent) document.documentElement.dataset.accent = accent
   }, [accent])
+
+  // A fresh install starts with just the Getting started list, switched on. The built-in ones are kept for anyone already using the
+  // app whose plans were never saved (they've been seeing them all along); saving makes that stick.
+  useEffect(() => {
+    if (!tasks || !log || !reminders) return
+    get('plans').then((saved) => {
+      if (saved !== undefined) return
+      const inUse = tasks.length > 0 || Object.keys(log).length > 0 || reminders.length > 0
+      if (inUse) return savePlans(seedPlans(today))
+      const welcome = onboardingPlan(today)
+      savePlans([welcome])
+      saveTasks(enablePlan(welcome, tasks, today))
+    })
+  }, [!tasks || !log || !reminders])
 
   // Every group is a plan in Manage: tasks put in a group from Today join (or make) its plan
   useEffect(() => {
