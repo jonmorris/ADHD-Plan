@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import { Account, type Accent, type Theme } from './Account'
 import { useBack } from './back'
 import { DEFAULT_BACKLOG, type Backlog } from './backlog'
+import type { DroppedGroups } from './Today'
 import { toDateKey } from './dates'
 import type { CashOut, Tracking } from './money'
 import { Playbook } from './Playbook'
@@ -36,6 +37,7 @@ export function App() {
   const [doNext, saveDoNext] = usePersisted<DoNext>('doNext', {})
   const [cashOuts, saveCashOuts] = usePersisted<CashOut[]>('cashOuts', [])
   const [backlog, saveBacklog] = usePersisted<Backlog>('backlog', DEFAULT_BACKLOG)
+  const [droppedGroups, saveDroppedGroups] = usePersisted<DroppedGroups>('droppedGroups', {})
   const [theme, saveTheme] = usePersisted<Theme>('theme', 'system')
   useEffect(() => {
     if (theme === 'system' || !theme) delete document.documentElement.dataset.theme
@@ -55,10 +57,10 @@ export function App() {
     saveTasks(adopted.tasks)
   }, [tasks, plans])
 
-  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme || !focus || !doNext || !cashOuts || !backlog || !accent) return null
+  if (!tasks || !log || !pages || !order || !groupOrder || !collapsed || !plans || !tracking || !reminders || !dismissed || !priorities || !theme || !focus || !doNext || !cashOuts || !backlog || !droppedGroups || !accent) return null
 
   function exportData() {
-    const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, priorities, doNext, cashOuts, order, groupOrder }, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify({ tasks, log, pages, plans, reminders, dismissed, priorities, doNext, cashOuts, order, groupOrder, droppedGroups }, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `adhd-plan-${today}.json`
@@ -95,6 +97,8 @@ export function App() {
             savePriorities={savePriorities}
             saveDoNext={saveDoNext}
             backlog={backlog}
+            droppedGroups={droppedGroups}
+            saveDroppedGroups={saveDroppedGroups}
           />
         )}
         {tab === 'playbook' && (

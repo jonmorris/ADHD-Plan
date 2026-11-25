@@ -26,6 +26,9 @@ import { carryOver, doNextOn, MAX_PRIORITIES, toggleDoNext, togglePriority, type
 import { remindersOn, toggleDismissed, type Dismissed, type Reminder, type ReminderType } from './reminders'
 import { TaskForm } from './TaskForm'
 
+// Groups dropped for a day: droppedGroups[date] = the groups (and the undone tasks set aside)
+export type DroppedGroups = Record<string, { group: string; ids: string[] }[]>
+
 type Props = {
   tasks: Task[]
   plans: Plan[]
@@ -51,6 +54,8 @@ type Props = {
   savePriorities: (priorities: Priorities) => void
   saveDoNext: (doNext: DoNext) => void
   backlog: Backlog
+  droppedGroups: DroppedGroups
+  saveDroppedGroups: (droppedGroups: DroppedGroups) => void
 }
 
 const LABELS: Record<State, string> = { [-1]: 'Marked not done', 0: 'Not done', 0.5: 'Half done', 1: 'Done' }
@@ -182,12 +187,15 @@ export function Today({
   savePriorities,
   saveDoNext,
   backlog,
+  droppedGroups,
+  saveDroppedGroups,
 }: Props) {
   const [date, setDate] = useState(today)
   const [editing, setEditing] = useState<Task>()
   const [editingReminder, setEditingReminder] = useState(false)
   const [reordering, setReordering] = useState(false)
   const [trayOpen, setTrayOpen] = useState(false)
+  const [droppedTrayOpen, setDroppedTrayOpen] = useState(false)
   // Sequential groups opened up to show the tasks still waiting their turn
   const [showAllOf, setShowAllOf] = useState<string[]>([])
   useBack(!!editing, () => setEditing(undefined))
@@ -204,7 +212,9 @@ export function Today({
   const backlogged = hiddenByBacklog(dueAll, backlog)
   const due = dueAll.filter((t) => !backlogged.has(t.id))
   const counted = backlogged.size ? tasks.filter((t) => !backlogged.has(t.id)) : tasks
-  const daySections = sections(due, groupOrder)
+  // Groups dropped for the day are off the list (their done tasks stay done)
+  const droppedToday = droppedGroups[date] ?? []
+  const daySections = sections(due, groupOrder).filter((s) => !droppedToday.some((d) => d.group === s.group))
   const namedSections = daySections.filter((s) => s.group)
   const allGroups = sortGroups(
     tasks.filter((t) => !t.removedOn).map(groupOf),
@@ -238,6 +248,28 @@ export function Today({
 
   // Press and hold a checkbox to mark it ✗ (not done); hold again to clear it.
   const holdTimer = useRef<number>()
+
+  // Press and hold a group's heading to drop the whole group for the day: its undone tasks are set
+  // aside (like a deferred task, counting neither way) and it moves to the Dropped tray.
+  const groupHeld = useRef(false)
+
+  function startGroupHold(group: string, list: Task[]) {
+    groupHeld.current = false
+    holdTimer.current = window.setTimeout(() => {
+      groupHeld.current = true
+      const ids = list.filter((t) => stateOn(t, date, log) !== 1).map((t) => t.id)
+      saveLog({ ...log, [date]: { ...log[date], ...Object.fromEntries(ids.map((id) => [id, DISMISSED])) } })
+      saveDroppedGroups({ ...droppedGroups, [date]: [...droppedToday, { group, ids }] })
+    }, 500)
+  }
+
+  function restoreGroup(group: string) {
+    const entry = droppedToday.find((d) => d.group === group)
+    const day = { ...log[date] }
+    for (const id of entry?.ids ?? []) if (day[id] === DISMISSED) delete day[id]
+    saveLog({ ...log, [date]: day })
+    saveDroppedGroups({ ...droppedGroups, [date]: droppedToday.filter((d) => d.group !== group) })
+  }
   const held = useRef(false)
 
   function startHold(task: Task) {
@@ -321,8 +353,8 @@ export function Today({
 
   // Takes a task off the list from today on (Drop in its action bar, Remove in its form).
   // Its history stays.
-  function drop(task: Task, verb = 'Drop'): boolean {
-    if (!confirm(`${verb} "${task.title}"? It leaves your list from today. Its history stays in Analytics.`)) return false
+  function drop(task: Task, confirmVerb?: string): boolean {
+    if (confirmVerb && !confirm(`${confirmVerb} "${task.title}"? It leaves your list from today. Its history stays in Analytics.`)) return false
     // A removed plan task stays removed if the plan is turned off and on again
     saveTasks(tasks.map((t) => (t.id === task.id ? { ...t, removedOn: today, dismissed: !!t.plan || undefined } : t)))
     return true
@@ -638,7 +670,19 @@ export function Today({
           <section key={section.group || '(none)'}>
             <div class="group-head">
               <h2>
-                <button class="group-toggle" aria-expanded={!isCollapsed} onClick={() => toggleCollapsed(collapseKey)}>
+                <button
+                  class="group-toggle"
+                  aria-expanded={!isCollapsed}
+                  onClick={() => {
+                    if (groupHeld.current) return void (groupHeld.current = false)
+                    toggleCollapsed(collapseKey)
+                  }}
+                  onPointerDown={() => !reordering && startGroupHold(section.group, section.tasks)}
+                  onPointerUp={() => clearTimeout(holdTimer.current)}
+                  onPointerLeave={() => clearTimeout(holdTimer.current)}
+                  onPointerCancel={() => clearTimeout(holdTimer.current)}
+                  onContextMenu={(e) => e.preventDefault()}
+                >
                   <span class="chevron" aria-hidden="true">
                     {isCollapsed ? '▸' : '▾'}
                   </span>
@@ -684,6 +728,34 @@ export function Today({
           </section>
         )
       })}
+
+      {droppedToday.length > 0 && (
+        <section class="tray">
+          <div class="group-head">
+            <h2>
+              <button class="group-toggle" aria-expanded={droppedTrayOpen} onClick={() => setDroppedTrayOpen(!droppedTrayOpen)}>
+                <span class="chevron" aria-hidden="true">
+                  {droppedTrayOpen ? '▾' : '▸'}
+                </span>
+                Dropped today
+                <span class="group-count">{droppedToday.length}</span>
+              </button>
+            </h2>
+          </div>
+          <ul class="tasks dismissed-reminders" hidden={!droppedTrayOpen}>
+            {droppedToday.map((d) => (
+              <li key={d.group}>
+                <span class="title">
+                  <span class="name">{d.group || 'Tasks'}</span>
+                </span>
+                <button class="defer" aria-label={`Restore ${d.group || 'Tasks'}`} onClick={() => restoreGroup(d.group)}>
+                  {RESTORE}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {dayReminders.dismissed.length > 0 && (
         <section class="tray">

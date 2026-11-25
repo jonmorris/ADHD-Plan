@@ -51,7 +51,15 @@ on Today, a group made on Today becomes a plan, and names are unique ignoring ca
 
 The owner wanted a quick way to delete a task without opening its form. **Drop** joins the action bar: after
 a confirm, the task leaves the list from today on, and its history stays (the same as Remove in the form).
-It was first called Abandon; the owner chose Drop as the softer name.
+It was first called Abandon; the owner chose Drop as the softer name. From 25 November Drop no longer asks
+to confirm (owner's request); Remove in the form still does.
+
+## Drop a group for the day
+
+Holding a group's heading on Today drops the whole group for that day: its undone tasks are set aside like a
+deferred task (counting neither way), done ones stay done, and the group moves to a "Dropped today" tray where
+it can be restored. It's back the next day. The owner chose hold (tap still collapses) and the tray for undo
+(25 November).
 
 ## Backlog for your own one-off tasks
 
