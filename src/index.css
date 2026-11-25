@@ -618,6 +618,10 @@ button.link {
 }
 
 .group-toggle {
+  /* Held to drop a group for the day, so no text selection or menu */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   display: flex;
   align-items: center;
   gap: 0.4rem;
