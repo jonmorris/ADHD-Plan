@@ -1,3 +1,4 @@
+import { get } from 'idb-keyval'
 import { useEffect, useState } from 'preact/hooks'
 import { Account, type Accent, type Theme } from './Account'
 import { useBack } from './back'
@@ -47,6 +48,17 @@ export function App() {
   useEffect(() => {
     if (accent) document.documentElement.dataset.accent = accent
   }, [accent])
+
+  // A fresh install starts with no plans. The built-in ones are kept for anyone already using the
+  // app whose plans were never saved (they've been seeing them all along); saving makes that stick.
+  useEffect(() => {
+    if (!tasks || !log || !reminders) return
+    get('plans').then((saved) => {
+      if (saved !== undefined) return
+      const inUse = tasks.length > 0 || Object.keys(log).length > 0 || reminders.length > 0
+      savePlans(inUse ? seedPlans(today) : [])
+    })
+  }, [!tasks || !log || !reminders])
 
   // Every group is a plan in Manage: tasks put in a group from Today join (or make) its plan
   useEffect(() => {
