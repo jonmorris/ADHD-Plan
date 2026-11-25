@@ -83,7 +83,9 @@ high-priority tasks. Repeating tasks have no priority. Not to be confused with t
 ## A fresh install starts empty
 
 The open question from TODO.md (what a new install starts with) is settled: no built-in plans (owner's
-request, 25 November). Clean Mama, Morning routine, ADHD protection and Lifting stay in the code but are no
+request, 25 November), just a **Getting started** list instead: a project, switched on, whose tasks are
+examples that teach the app (tick, tap for actions, hold for Do next, hold for ✕, add a task, make a plan,
+drop a group, theme, backup). Ticking them off completes it. Clean Mama, Morning routine, ADHD protection and Lifting stay in the code but are no
 longer offered to new installs. Anyone already using the app keeps what they have: saved plans are untouched,
 and someone with tasks, a log or reminders whose plans were never saved gets the built-in ones saved for good
 on first load, since they've been seeing them all along.

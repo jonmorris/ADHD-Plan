@@ -7,7 +7,8 @@ import type { DroppedGroups } from './Today'
 import { toDateKey } from './dates'
 import type { CashOut, Tracking } from './money'
 import { Playbook } from './Playbook'
-import { adoptIntoPlans, seedPlans, type Plan } from './plans'
+import { onboardingPlan } from './onboarding'
+import { adoptIntoPlans, enablePlan, seedPlans, type Plan } from './plans'
 import type { DoNext, Focus, Priorities } from './priorities'
 import type { Dismissed, Reminder } from './reminders'
 import { usePersisted } from './store'
@@ -49,14 +50,17 @@ export function App() {
     if (accent) document.documentElement.dataset.accent = accent
   }, [accent])
 
-  // A fresh install starts with no plans. The built-in ones are kept for anyone already using the
+  // A fresh install starts with just the Getting started list, switched on. The built-in ones are kept for anyone already using the
   // app whose plans were never saved (they've been seeing them all along); saving makes that stick.
   useEffect(() => {
     if (!tasks || !log || !reminders) return
     get('plans').then((saved) => {
       if (saved !== undefined) return
       const inUse = tasks.length > 0 || Object.keys(log).length > 0 || reminders.length > 0
-      savePlans(inUse ? seedPlans(today) : [])
+      if (inUse) return savePlans(seedPlans(today))
+      const welcome = onboardingPlan(today)
+      savePlans([welcome])
+      saveTasks(enablePlan(welcome, tasks, today))
     })
   }, [!tasks || !log || !reminders])
 
