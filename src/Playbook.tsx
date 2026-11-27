@@ -8,6 +8,8 @@ import {
   disablePlan,
   enablePlan,
   asOneOff,
+  addBack,
+  droppedItems,
   isPlanOn,
   projectProgress,
   removeItem,
@@ -107,6 +109,19 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog
             <small>One-time tasks. Each stays done once ticked, and the project is complete when they all are.</small>
           </span>
         </label>
+        {plan.project && (
+          <label class="check-field">
+            <input
+              type="checkbox"
+              checked={!!plan.allowDrop}
+              onChange={(e) => update({ ...plan, allowDrop: e.currentTarget.checked || undefined })}
+            />
+            <span>
+              Allow Drop
+              <small>Its tasks get Drop in their action bar, to delete them in one tap</small>
+            </span>
+          </label>
+        )}
         <label class="check-field">
           <input
             type="checkbox"
@@ -268,10 +283,13 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog
   if (openPlan) {
     // Items as Today lists them: higher priority first, then the plan's order
     const listed = byPriority(openPlan.items)
+    // Items whose task was dropped or removed from the list, so they can be put back
+    const dropped = droppedItems(openPlan, tasks)
     // The options it has on, at a glance (set in Edit)
     const progress = openPlan.project && isPlanOn(openPlan.id, tasks) ? projectProgress(openPlan, tasks, log, today) : undefined
     const chips = [
       openPlan.project && 'Project',
+      openPlan.project && openPlan.allowDrop && 'Drop allowed',
       progress && (progress.complete ? 'Complete' : `${progress.done} of ${progress.total} done`),
       openPlan.sequential && 'Sequential',
       openPlan.dismissable && 'Deferrable',
@@ -344,7 +362,13 @@ export function Playbook({ plans, savePlans, order, saveOrder, tracking, backlog
                   {item.priority && <span class={`tag priority-${item.priority}`}>{PRIORITY_LABELS[item.priority]}</span>}
                 </span>
                 {item.notes && <span class="detail">{item.notes}</span>}
+                {dropped.includes(item) && <span class="detail">Not on your list</span>}
               </button>
+              {!reordering && dropped.includes(item) && (
+                <button class="add-back" onClick={() => saveTasks(addBack(openPlan, [item], tasks, today))}>
+                  Add back
+                </button>
+              )}
               {reordering && (
                 <MoveButtons
                   label={item.title}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseTaskLines } from './bulk'
-import { PLANS, adoptIntoPlans, asOneOff, disablePlan, enablePlan, isPlanOn, itemIndex, projectProgress, removeItem, renamePlan, seedPlans, swapItems, updateItem } from './plans'
+import { PLANS, addBack, adoptIntoPlans, droppedItems, asOneOff, disablePlan, enablePlan, isPlanOn, itemIndex, projectProgress, removeItem, renamePlan, seedPlans, swapItems, updateItem } from './plans'
 import { sortTasks, type Task } from './tasks'
 
 const today = '2026-10-23'
@@ -222,5 +222,22 @@ describe('groups are plans', () => {
 
   it('leaves ungrouped, removed and plan tasks alone', () => {
     expect(adoptIntoPlans([empty], [own('a'), own('b', 'x', { removedOn: today }), own('c', 'House Jobs', { plan: 'h' })])).toBeUndefined()
+  })
+})
+
+describe('putting dropped tasks back', () => {
+  it('finds items whose task was dropped and adds them back as new tasks from today', () => {
+    const tasks = enablePlan(cleanMama, [], today)
+    const dropped = tasks.map((t, i) => (i === 0 ? { ...t, removedOn: today, dismissed: true } : t))
+    const items = droppedItems(cleanMama, dropped)
+    expect(items.map((i) => i.id)).toEqual([cleanMama.items[0].id])
+    expect(enablePlan(cleanMama, dropped, today)).toEqual(dropped) // turning the plan on again doesn't
+    const later = '2026-10-30'
+    const back = addBack(cleanMama, items, dropped, later)
+    const fresh = back.filter((t) => !t.removedOn && t.planItem === items[0].id)
+    expect(fresh).toHaveLength(1)
+    expect(fresh[0].start).toBe(later)
+    expect(back.find((t) => t.id === dropped[0].id)).toMatchObject({ removedOn: today, dismissed: undefined })
+    expect(droppedItems(cleanMama, back)).toEqual([])
   })
 })
