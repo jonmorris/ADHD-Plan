@@ -353,6 +353,13 @@ export function Today({
 
   // Takes a task off the list from today on (Drop in its action bar, Remove in its form).
   // Its history stays.
+  // Drop is for your own one-off tasks (unless switched off on the Backlog page) and for projects that
+  // allow it. Tasks from routine plans are changed in Manage instead.
+  function canDrop(task: Task): boolean {
+    if (!task.plan) return task.repeat.kind === 'none' && !backlog.noDrop
+    return !!plans.find((p) => p.id === task.plan && p.project && p.allowDrop)
+  }
+
   function drop(task: Task, confirmVerb?: string): boolean {
     if (confirmVerb && !confirm(`${confirmVerb} "${task.title}"? It leaves your list from today. Its history stays in Analytics.`)) return false
     // A removed plan task stays removed if the plan is turned off and on again
@@ -479,9 +486,11 @@ export function Today({
               </button>
             )}
             <button onClick={() => act(() => setEditing(t))}>Edit</button>
-            <button class="danger" onClick={() => act(() => drop(t))}>
-              Drop
-            </button>
+            {canDrop(t) && (
+              <button class="danger" onClick={() => act(() => drop(t))}>
+                Drop
+              </button>
+            )}
           </div>
         )}
         {reordering && (home || top3) && (

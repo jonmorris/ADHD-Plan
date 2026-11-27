@@ -67,6 +67,13 @@ export function BacklogPage({ tasks, saveTasks, order, saveOrder, backlog, saveB
       <p>Your own one-off tasks. With a limit on, Today shows only the first few; the next moves up the day after you finish one.</p>
       <div class="plan-settings">
         <label class="check-field">
+          <input type="checkbox" checked={!backlog.noDrop} onChange={(e) => saveBacklog({ ...backlog, noDrop: !e.currentTarget.checked || undefined })} />
+          <span>
+            Allow Drop
+            <small>Your one-off tasks get Drop in their action bar, to delete them in one tap</small>
+          </span>
+        </label>
+        <label class="check-field">
           <input type="checkbox" checked={backlog.on} onChange={(e) => saveBacklog({ ...backlog, on: e.currentTarget.checked })} />
           <span>
             Limit tasks on Today

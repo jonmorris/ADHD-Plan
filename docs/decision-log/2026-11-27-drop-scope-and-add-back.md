@@ -1,0 +1,1 @@
+| 2026-11-27 | Product | Drop limited to your own one-off tasks (default on) and projects that allow it (default off); dropped plan tasks can be added back from Manage | DECISIONS.md → Where Drop applies, and getting dropped tasks back |

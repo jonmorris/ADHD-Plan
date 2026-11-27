@@ -4,7 +4,7 @@
 import { groupOf } from './groups'
 import type { Task } from './tasks'
 
-export type Backlog = { on: boolean; limit: number }
+export type Backlog = { on: boolean; limit: number; noDrop?: boolean } // noDrop: hide Drop on your own one-off tasks
 
 export const DEFAULT_BACKLOG: Backlog = { on: false, limit: 3 }
 

@@ -19,6 +19,7 @@ export type Plan = {
   bonus?: number // dollars earned on a day when all its daily tasks are done
   weeklyBonus?: number // dollars earned when all its weekly tasks in a week are done
   project?: boolean // one-time tasks: each stays done, and the plan is complete when all are
+  allowDrop?: boolean // a project's tasks get Drop in their action bar (off by default)
 }
 
 type BuiltInPlan = Omit<Plan, 'items'> & { body: string }
@@ -203,6 +204,20 @@ export function projectProgress(plan: Plan, tasks: Task[], log: Log, key: string
     return d !== undefined && d <= key
   }).length
   return { done, total: own.length, complete: own.length > 0 && done === own.length }
+}
+
+// Puts back plan items whose tasks were dropped or removed: they're added again from today, as new
+// tasks (the old ones keep their history).
+export function addBack(plan: Plan, items: PlanItem[], tasks: Task[], today: string): Task[] {
+  const undropped = tasks.map((t) => (t.dismissed && items.some((i) => isFrom(t, plan.id, i)) ? { ...t, dismissed: undefined } : t))
+  return enablePlan({ ...plan, items }, undropped, today)
+}
+
+// Items with no task on the list because theirs was dropped or removed.
+export function droppedItems(plan: Plan, tasks: Task[]): PlanItem[] {
+  return plan.items.filter(
+    (i) => tasks.some((t) => t.dismissed && isFrom(t, plan.id, i)) && !tasks.some((t) => !t.removedOn && isFrom(t, plan.id, i)),
+  )
 }
 
 // Project items don't repeat.

@@ -54,6 +54,15 @@ a confirm, the task leaves the list from today on, and its history stays (the sa
 It was first called Abandon; the owner chose Drop as the softer name. From 25 November Drop no longer asks
 to confirm (owner's request); Remove in the form still does.
 
+## Where Drop applies, and getting dropped tasks back
+
+Drop was asked for to delete individual tasks, but it showed on every task, so dropping a recurring plan task
+removed it for good and there was no way back (turning the plan off and on skipped it). The owner settled it
+on 27 November: Drop is for your own one-off tasks (on by default, switch on the Backlog page) and for
+projects that allow it (an "Allow Drop" option, off by default). Tasks from routine plans don't get Drop;
+they're changed in Manage. A plan's page marks items whose task was dropped or removed as "Not on your list"
+with an **Add back** button, which adds them again from today (the old task keeps its history).
+
 ## Drop a group for the day
 
 Holding a group's heading on Today drops the whole group for that day: its undone tasks are set aside like a
